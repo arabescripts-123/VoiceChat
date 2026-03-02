@@ -201,8 +201,9 @@ for _, plr in pairs(game.Players:GetPlayers()) do
     if plr ~= player then
         plr.Chatted:Connect(function(message)
             if allChatEnabled then
-                print("[DEBUG]", plr.Name, ":", message)
-                addToQueue(plr.Name .. " disse: " .. message)
+                local displayName = plr.DisplayName
+                print("[DEBUG]", displayName, ":", message)
+                addToQueue(displayName .. " disse: " .. message)
             end
         end)
     end
@@ -211,8 +212,9 @@ end
 game.Players.PlayerAdded:Connect(function(plr)
     plr.Chatted:Connect(function(message)
         if allChatEnabled then
-            print("[DEBUG]", plr.Name, ":", message)
-            addToQueue(plr.Name .. " disse: " .. message)
+            local displayName = plr.DisplayName
+            print("[DEBUG]", displayName, ":", message)
+            addToQueue(displayName .. " disse: " .. message)
         end
     end)
 end)
