@@ -138,15 +138,26 @@ allChatIndicatorCorner.Parent = allChatIndicator
 local ttsEnabled = false
 local allChatEnabled = false
 local toggleKey = Enum.KeyCode.Z
+local messageQueue = {}
 
-local function sendToTTS(text)
+local function addToQueue(text)
+    table.insert(messageQueue, text)
+    local queueText = table.concat(messageQueue, "\n")
     local success, err = pcall(function()
-        print("[DEBUG] Tentando salvar:", text)
-        writefile("tts_message.txt", text .. "\n" .. tick())
-        print("[DEBUG] Arquivo salvo com sucesso!")
+        writefile("tts_message.txt", queueText)
     end)
     if not success then
-        warn("[DEBUG] ERRO ao salvar:", err)
+        warn("[DEBUG] ERRO:", err)
+    end
+end
+
+local function removeFromQueue()
+    if #messageQueue > 0 then
+        table.remove(messageQueue, 1)
+        local queueText = table.concat(messageQueue, "\n")
+        pcall(function()
+            writefile("tts_message.txt", queueText)
+        end)
     end
 end
 
@@ -155,8 +166,8 @@ ttsBtn.MouseButton1Click:Connect(function()
     ttsEnabled = not ttsEnabled
     if ttsEnabled then
         ttsIndicator.BackgroundColor3 = Color3.fromRGB(50, 255, 50)
-        print("[DEBUG] TTS Ativado - Enviando 'Oi Xexelento'")
-        sendToTTS("Oi Xexelento")
+        print("[DEBUG] TTS Ativado")
+        addToQueue("Oi Xexelento")
     else
         ttsIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
         print("[DEBUG] TTS Desativado")
@@ -180,25 +191,18 @@ rejoinBtn.MouseButton1Click:Connect(function()
 end)
 
 player.Chatted:Connect(function(message)
-    print("[DEBUG] Você digitou:", message)
-    if not ttsEnabled then 
-        print("[DEBUG] TTS desativado, ignorando")
-        return 
-    end
-    if message:sub(1, 1) == "/" then 
-        print("[DEBUG] Comando ignorado")
-        return 
-    end
-    print("[DEBUG] Enviando para TTS:", message)
-    sendToTTS(message)
+    if not ttsEnabled then return end
+    if message:sub(1, 1) == "/" then return end
+    print("[DEBUG] Você:", message)
+    addToQueue(message)
 end)
 
 for _, plr in pairs(game.Players:GetPlayers()) do
     if plr ~= player then
         plr.Chatted:Connect(function(message)
             if allChatEnabled then
-                print("[DEBUG] Outro jogador falou:", plr.Name, message)
-                sendToTTS(plr.Name .. " disse: " .. message)
+                print("[DEBUG]", plr.Name, ":", message)
+                addToQueue(plr.Name .. " disse: " .. message)
             end
         end)
     end
@@ -207,8 +211,8 @@ end
 game.Players.PlayerAdded:Connect(function(plr)
     plr.Chatted:Connect(function(message)
         if allChatEnabled then
-            print("[DEBUG] Jogador novo falou:", plr.Name, message)
-            sendToTTS(plr.Name .. " disse: " .. message)
+            print("[DEBUG]", plr.Name, ":", message)
+            addToQueue(plr.Name .. " disse: " .. message)
         end
     end)
 end)
