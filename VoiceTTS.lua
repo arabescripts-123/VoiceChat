@@ -1,4 +1,4 @@
--- Voice Chat TTS Script (FINAL)
+-- Voice Chat TTS Script (DEBUG)
 print("[VoiceTTS] Iniciando...")
 
 local player = game.Players.LocalPlayer
@@ -140,27 +140,38 @@ local allChatEnabled = false
 local toggleKey = Enum.KeyCode.Z
 
 local function sendToTTS(text)
-    pcall(function()
-        writefile("tts_message.txt", text)
+    local success, err = pcall(function()
+        print("[DEBUG] Tentando salvar:", text)
+        writefile("tts_message.txt", text .. "\n" .. tick())
+        print("[DEBUG] Arquivo salvo com sucesso!")
     end)
+    if not success then
+        warn("[DEBUG] ERRO ao salvar:", err)
+    end
 end
 
 ttsBtn.MouseButton1Click:Connect(function()
+    print("[DEBUG] Botão Voice TTS clicado!")
     ttsEnabled = not ttsEnabled
     if ttsEnabled then
         ttsIndicator.BackgroundColor3 = Color3.fromRGB(50, 255, 50)
+        print("[DEBUG] TTS Ativado - Enviando 'Oi Xexelento'")
         sendToTTS("Oi Xexelento")
     else
         ttsIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+        print("[DEBUG] TTS Desativado")
     end
 end)
 
 allChatBtn.MouseButton1Click:Connect(function()
+    print("[DEBUG] Botão All Chat clicado!")
     allChatEnabled = not allChatEnabled
     if allChatEnabled then
         allChatIndicator.BackgroundColor3 = Color3.fromRGB(50, 255, 50)
+        print("[DEBUG] All Chat Ativado")
     else
         allChatIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+        print("[DEBUG] All Chat Desativado")
     end
 end)
 
@@ -169,8 +180,16 @@ rejoinBtn.MouseButton1Click:Connect(function()
 end)
 
 player.Chatted:Connect(function(message)
-    if not ttsEnabled then return end
-    if message:sub(1, 1) == "/" then return end
+    print("[DEBUG] Você digitou:", message)
+    if not ttsEnabled then 
+        print("[DEBUG] TTS desativado, ignorando")
+        return 
+    end
+    if message:sub(1, 1) == "/" then 
+        print("[DEBUG] Comando ignorado")
+        return 
+    end
+    print("[DEBUG] Enviando para TTS:", message)
     sendToTTS(message)
 end)
 
@@ -178,6 +197,7 @@ for _, plr in pairs(game.Players:GetPlayers()) do
     if plr ~= player then
         plr.Chatted:Connect(function(message)
             if allChatEnabled then
+                print("[DEBUG] Outro jogador falou:", plr.Name, message)
                 sendToTTS(plr.Name .. " disse: " .. message)
             end
         end)
@@ -187,6 +207,7 @@ end
 game.Players.PlayerAdded:Connect(function(plr)
     plr.Chatted:Connect(function(message)
         if allChatEnabled then
+            print("[DEBUG] Jogador novo falou:", plr.Name, message)
             sendToTTS(plr.Name .. " disse: " .. message)
         end
     end)
@@ -200,3 +221,4 @@ UIS.InputBegan:Connect(function(input, gameProcessed)
 end)
 
 print("[VoiceTTS] Carregado! Z=Menu")
+print("[DEBUG] Teste: writefile existe?", writefile ~= nil)
