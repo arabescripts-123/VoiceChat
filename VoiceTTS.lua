@@ -139,26 +139,24 @@ local ttsEnabled = false
 local allChatEnabled = false
 local toggleKey = Enum.KeyCode.Z
 local messageQueue = {}
+local spokenMessages = {}
 
 local function addToQueue(text)
+    if spokenMessages[text] then return end
     table.insert(messageQueue, text)
     local queueText = table.concat(messageQueue, "\n")
-    local success, err = pcall(function()
+    pcall(function()
         writefile("tts_message.txt", queueText)
     end)
-    if not success then
-        warn("[DEBUG] ERRO:", err)
-    end
 end
 
-local function removeFromQueue()
-    if #messageQueue > 0 then
-        table.remove(messageQueue, 1)
-        local queueText = table.concat(messageQueue, "\n")
-        pcall(function()
-            writefile("tts_message.txt", queueText)
-        end)
-    end
+local function clearQueue()
+    messageQueue = {}
+    spokenMessages = {}
+    pcall(function()
+        writefile("tts_message.txt", "")
+    end)
+    print("[DEBUG] Fila limpa")
 end
 
 ttsBtn.MouseButton1Click:Connect(function()
@@ -167,10 +165,12 @@ ttsBtn.MouseButton1Click:Connect(function()
     if ttsEnabled then
         ttsIndicator.BackgroundColor3 = Color3.fromRGB(50, 255, 50)
         print("[DEBUG] TTS Ativado")
+        clearQueue()
         addToQueue("Oi Xexelento")
     else
         ttsIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
         print("[DEBUG] TTS Desativado")
+        clearQueue()
     end
 end)
 
@@ -180,9 +180,11 @@ allChatBtn.MouseButton1Click:Connect(function()
     if allChatEnabled then
         allChatIndicator.BackgroundColor3 = Color3.fromRGB(50, 255, 50)
         print("[DEBUG] All Chat Ativado")
+        clearQueue()
     else
         allChatIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
         print("[DEBUG] All Chat Desativado")
+        clearQueue()
     end
 end)
 
@@ -226,5 +228,9 @@ UIS.InputBegan:Connect(function(input, gameProcessed)
     end
 end)
 
+game.Players.LocalPlayer.OnTeleport:Connect(function()
+    clearQueue()
+end)
+
 print("[VoiceTTS] Carregado! Z=Menu")
-print("[DEBUG] Teste: writefile existe?", writefile ~= nil)
+print("[DEBUG] writefile:", writefile ~= nil)
