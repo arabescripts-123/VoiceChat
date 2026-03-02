@@ -208,13 +208,18 @@ local spokenMessages = {}
 local voiceSpeed = 1.0
 
 local function addToQueue(text, speed)
-    if spokenMessages[text] then return end
+    if spokenMessages[text] then 
+        print("[DEBUG] Mensagem já falada, ignorando:", text)
+        return 
+    end
+    print("[DEBUG] Adicionando à fila:", text)
     table.insert(messageQueue, text)
     local queueText = table.concat(messageQueue, "\n")
     pcall(function()
         writefile("tts_message.txt", queueText)
         writefile("tts_speed.txt", tostring(speed or voiceSpeed))
     end)
+    print("[DEBUG] Arquivo salvo. Fila tem", #messageQueue, "mensagens")
 end
 
 local function clearQueue()
@@ -268,11 +273,15 @@ end)
 
 local function setupPlayerChat(plr)
     if plr == player then return end
+    print("[DEBUG] Configurando chat de:", plr.DisplayName)
     plr.Chatted:Connect(function(message)
+        print("[DEBUG] Chat detectado de", plr.DisplayName, ":", message)
         if allChatEnabled then
             local displayName = plr.DisplayName
-            print("[DEBUG]", displayName, ":", message)
+            print("[DEBUG] Adicionando à fila:", displayName, "disse:", message)
             addToQueue(displayName .. " disse: " .. message)
+        else
+            print("[DEBUG] All Chat está desativado, ignorando")
         end
     end)
 end
