@@ -19,7 +19,7 @@ local MainFrame = Instance.new("Frame")
 MainFrame.Parent = ScreenGui
 MainFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 MainFrame.Position = UDim2.new(0.02, 0, 0.3, 0)
-MainFrame.Size = UDim2.new(0, 220, 0, 100)
+MainFrame.Size = UDim2.new(0, 220, 0, 145)
 
 local UICorner = Instance.new("UICorner")
 UICorner.CornerRadius = UDim.new(0, 8)
@@ -109,17 +109,54 @@ local ttsIndicatorCorner = Instance.new("UICorner")
 ttsIndicatorCorner.CornerRadius = UDim.new(1, 0)
 ttsIndicatorCorner.Parent = ttsIndicator
 
+local allChatBtn = Instance.new("TextButton")
+allChatBtn.Parent = MainFrame
+allChatBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+allChatBtn.Position = UDim2.new(0, 10, 0, 95)
+allChatBtn.Size = UDim2.new(0, 200, 0, 35)
+allChatBtn.Font = Enum.Font.Gotham
+allChatBtn.Text = "All Chat TTS"
+allChatBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+allChatBtn.TextSize = 13
+
+local allChatBtnCorner = Instance.new("UICorner")
+allChatBtnCorner.CornerRadius = UDim.new(0, 6)
+allChatBtnCorner.Parent = allChatBtn
+
+local allChatIndicator = Instance.new("Frame")
+allChatIndicator.Parent = allChatBtn
+allChatIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+allChatIndicator.Position = UDim2.new(1, -25, 0.5, -8)
+allChatIndicator.Size = UDim2.new(0, 16, 0, 16)
+allChatIndicator.BorderSizePixel = 0
+
+local allChatIndicatorCorner = Instance.new("UICorner")
+allChatIndicatorCorner.CornerRadius = UDim.new(1, 0)
+allChatIndicatorCorner.Parent = allChatIndicator
+
 local ttsEnabled = false
+local allChatEnabled = false
 local toggleKey = Enum.KeyCode.Z
 
 ttsBtn.MouseButton1Click:Connect(function()
     ttsEnabled = not ttsEnabled
     if ttsEnabled then
         ttsIndicator.BackgroundColor3 = Color3.fromRGB(50, 255, 50)
-        print("[TTS] Ativado! Certifique-se que o Python está rodando.")
+        print("[TTS] Seu chat ativado!")
     else
         ttsIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-        print("[TTS] Desativado")
+        print("[TTS] Seu chat desativado")
+    end
+end)
+
+allChatBtn.MouseButton1Click:Connect(function()
+    allChatEnabled = not allChatEnabled
+    if allChatEnabled then
+        allChatIndicator.BackgroundColor3 = Color3.fromRGB(50, 255, 50)
+        print("[TTS] Chat de todos ativado!")
+    else
+        allChatIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+        print("[TTS] Chat de todos desativado")
     end
 end)
 
@@ -130,8 +167,25 @@ end)
 player.Chatted:Connect(function(message)
     if not ttsEnabled then return end
     if message:sub(1, 1) == "/" then return end
-    
     print("[TTS]", message)
+end)
+
+for _, plr in pairs(game.Players:GetPlayers()) do
+    if plr ~= player then
+        plr.Chatted:Connect(function(message)
+            if allChatEnabled then
+                print("[TTS]", plr.Name .. ": " .. message)
+            end
+        end)
+    end
+end
+
+game.Players.PlayerAdded:Connect(function(plr)
+    plr.Chatted:Connect(function(message)
+        if allChatEnabled then
+            print("[TTS]", plr.Name .. ": " .. message)
+        end
+    end)
 end)
 
 UIS.InputBegan:Connect(function(input, gameProcessed)
@@ -144,5 +198,3 @@ end)
 ScreenGui.Parent = game.CoreGui
 
 print("[VoiceTTS] Carregado! Z=Menu")
-print("[TTS] IMPORTANTE: Execute o Python antes de usar!")
-print("[TTS] Suas mensagens serão copiadas para a área de transferência")
