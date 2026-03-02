@@ -1,4 +1,4 @@
--- Voice Chat TTS Script (File Version)
+-- Voice Chat TTS Script
 print("[VoiceTTS] Iniciando...")
 
 local player = game.Players.LocalPlayer
@@ -14,13 +14,13 @@ end)
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "VoiceTTSGui"
 ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = game.CoreGui
 
 local MainFrame = Instance.new("Frame")
 MainFrame.Parent = ScreenGui
 MainFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 MainFrame.Position = UDim2.new(0.02, 0, 0.3, 0)
 MainFrame.Size = UDim2.new(0, 220, 0, 140)
-MainFrame.Visible = true
 
 local UICorner = Instance.new("UICorner")
 UICorner.CornerRadius = UDim.new(0, 8)
@@ -85,6 +85,7 @@ UIS.InputChanged:Connect(function(input)
     end
 end)
 
+-- Botão 1: Voice TTS (só suas mensagens)
 local ttsBtn = Instance.new("TextButton")
 ttsBtn.Parent = MainFrame
 ttsBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
@@ -110,18 +111,16 @@ local ttsIndicatorCorner = Instance.new("UICorner")
 ttsIndicatorCorner.CornerRadius = UDim.new(1, 0)
 ttsIndicatorCorner.Parent = ttsIndicator
 
+-- Botão 2: All Chat TTS (mensagens de todos)
 local allChatBtn = Instance.new("TextButton")
-allChatBtn.Name = "AllChatButton"
 allChatBtn.Parent = MainFrame
 allChatBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
-allChatBtn.Position = UDim2.new(0, 10, 0, 90)
+allChatBtn.Position = UDim2.new(0, 10, 0, 95)
 allChatBtn.Size = UDim2.new(0, 200, 0, 35)
 allChatBtn.Font = Enum.Font.Gotham
 allChatBtn.Text = "All Chat TTS"
 allChatBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 allChatBtn.TextSize = 13
-allChatBtn.Visible = true
-allChatBtn.ZIndex = 2
 
 local allChatBtnCorner = Instance.new("UICorner")
 allChatBtnCorner.CornerRadius = UDim.new(0, 6)
@@ -199,11 +198,5 @@ UIS.InputBegan:Connect(function(input, gameProcessed)
     end
 end)
 
-ScreenGui.Parent = game.CoreGui
-
-wait(0.1)
-allChatBtn.Visible = true
-MainFrame.Visible = true
-
 print("[VoiceTTS] Carregado! Z=Menu")
-print("[DEBUG] Botoes criados: Voice TTS e All Chat TTS")
+print("[TTS] Oi Xexelento")
