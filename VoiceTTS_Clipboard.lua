@@ -131,8 +131,7 @@ player.Chatted:Connect(function(message)
     if not ttsEnabled then return end
     if message:sub(1, 1) == "/" then return end
     
-    print("[TTS] Enviando:", message)
-    setclipboard(message)
+    print("[TTS]", message)
 end)
 
 UIS.InputBegan:Connect(function(input, gameProcessed)
