@@ -45,6 +45,21 @@ Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Position = UDim2.new(0, 10, 0, 0)
 Title.Active = true
 
+-- Rejoin Button
+local rejoinBtn = Instance.new("TextButton")
+rejoinBtn.Parent = MainFrame
+rejoinBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+rejoinBtn.Position = UDim2.new(1, -40, 0, 5)
+rejoinBtn.Size = UDim2.new(0, 35, 0, 30)
+rejoinBtn.Font = Enum.Font.GothamBold
+rejoinBtn.Text = "R"
+rejoinBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+rejoinBtn.TextSize = 14
+
+local rejoinCorner = Instance.new("UICorner")
+rejoinCorner.CornerRadius = UDim.new(0, 6)
+rejoinCorner.Parent = rejoinBtn
+
 -- Dragging
 local dragging, dragInput, dragStart, startPos
 
@@ -197,8 +212,25 @@ aiChatBtn.MouseButton1Click:Connect(function()
     print("[AI]", aiChatEnabled and "Ativado" or "Desativado")
 end)
 
+rejoinBtn.MouseButton1Click:Connect(function()
+    local TeleportService = game:GetService("TeleportService")
+    TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, player)
+end)
+
 -- Chat Events
 player.Chatted:Connect(function(message)
+    -- Prefixo /tts para falar sem aparecer no chat
+    if message:sub(1, 5) == "/tts " then
+        if ttsEnabled then
+            local text = message:sub(6)
+            print("[TTS] Você (privado):", text)
+            clearQueue()
+            addToQueue(text)
+        end
+        return
+    end
+    
+    -- Voice TTS normal (aparece no chat)
     if not ttsEnabled then return end
     if message:sub(1, 1) == "/" then return end
     print("[TTS] Você:", message)
