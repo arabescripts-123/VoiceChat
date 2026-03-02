@@ -1,10 +1,9 @@
--- Voice Chat TTS Script
+-- Voice Chat TTS Script (FINAL)
 print("[VoiceTTS] Iniciando...")
 
 local player = game.Players.LocalPlayer
 local UIS = game:GetService("UserInputService")
 local TeleportService = game:GetService("TeleportService")
-local HttpService = game:GetService("HttpService")
 
 pcall(function()
     if game.CoreGui:FindFirstChild("VoiceTTSGui") then
@@ -142,8 +141,7 @@ local toggleKey = Enum.KeyCode.Z
 
 local function sendToTTS(text)
     pcall(function()
-        local url = "http://localhost:8080/tts?text=" .. HttpService:UrlEncode(text)
-        HttpService:GetAsync(url)
+        writefile("tts_message.txt", text)
     end)
 end
 
@@ -151,6 +149,7 @@ ttsBtn.MouseButton1Click:Connect(function()
     ttsEnabled = not ttsEnabled
     if ttsEnabled then
         ttsIndicator.BackgroundColor3 = Color3.fromRGB(50, 255, 50)
+        sendToTTS("Oi Xexelento")
     else
         ttsIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
     end
