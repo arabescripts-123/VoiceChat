@@ -4,6 +4,7 @@ print("[VoiceTTS] Iniciando...")
 local player = game.Players.LocalPlayer
 local UIS = game:GetService("UserInputService")
 local TeleportService = game:GetService("TeleportService")
+local HttpService = game:GetService("HttpService")
 
 pcall(function()
     if game.CoreGui:FindFirstChild("VoiceTTSGui") then
@@ -85,7 +86,6 @@ UIS.InputChanged:Connect(function(input)
     end
 end)
 
--- Botão 1: Voice TTS (só suas mensagens)
 local ttsBtn = Instance.new("TextButton")
 ttsBtn.Parent = MainFrame
 ttsBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
@@ -111,7 +111,6 @@ local ttsIndicatorCorner = Instance.new("UICorner")
 ttsIndicatorCorner.CornerRadius = UDim.new(1, 0)
 ttsIndicatorCorner.Parent = ttsIndicator
 
--- Botão 2: All Chat TTS (mensagens de todos)
 local allChatBtn = Instance.new("TextButton")
 allChatBtn.Parent = MainFrame
 allChatBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
@@ -141,14 +140,19 @@ local ttsEnabled = false
 local allChatEnabled = false
 local toggleKey = Enum.KeyCode.Z
 
+local function sendToTTS(text)
+    pcall(function()
+        local url = "http://localhost:8080/tts?text=" .. HttpService:UrlEncode(text)
+        HttpService:GetAsync(url)
+    end)
+end
+
 ttsBtn.MouseButton1Click:Connect(function()
     ttsEnabled = not ttsEnabled
     if ttsEnabled then
         ttsIndicator.BackgroundColor3 = Color3.fromRGB(50, 255, 50)
-        print("[TTS] Seu chat ativado!")
     else
         ttsIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-        print("[TTS] Seu chat desativado")
     end
 end)
 
@@ -156,10 +160,8 @@ allChatBtn.MouseButton1Click:Connect(function()
     allChatEnabled = not allChatEnabled
     if allChatEnabled then
         allChatIndicator.BackgroundColor3 = Color3.fromRGB(50, 255, 50)
-        print("[TTS] Chat de todos ativado!")
     else
         allChatIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-        print("[TTS] Chat de todos desativado")
     end
 end)
 
@@ -170,14 +172,14 @@ end)
 player.Chatted:Connect(function(message)
     if not ttsEnabled then return end
     if message:sub(1, 1) == "/" then return end
-    print("[TTS]", message)
+    sendToTTS(message)
 end)
 
 for _, plr in pairs(game.Players:GetPlayers()) do
     if plr ~= player then
         plr.Chatted:Connect(function(message)
             if allChatEnabled then
-                print("[TTS]", plr.Name .. ": " .. message)
+                sendToTTS(plr.Name .. " disse: " .. message)
             end
         end)
     end
@@ -186,7 +188,7 @@ end
 game.Players.PlayerAdded:Connect(function(plr)
     plr.Chatted:Connect(function(message)
         if allChatEnabled then
-            print("[TTS]", plr.Name .. ": " .. message)
+            sendToTTS(plr.Name .. " disse: " .. message)
         end
     end)
 end)
@@ -199,4 +201,3 @@ UIS.InputBegan:Connect(function(input, gameProcessed)
 end)
 
 print("[VoiceTTS] Carregado! Z=Menu")
-print("[TTS] Oi Xexelento")
