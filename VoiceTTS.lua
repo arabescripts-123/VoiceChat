@@ -242,11 +242,7 @@ local function setupPlayerChat(plr)
     if plr == player then return end
     
     plr.Chatted:Connect(function(message)
-        -- Voice TTS tem prioridade (ignora All Chat)
-        if ttsEnabled then
-            print("[DEBUG] Ignorando All Chat - Voice TTS ativo")
-            return
-        end
+        print("[DEBUG] Player", plr.DisplayName, "falou:", message)
         
         local isNearby = isPlayerNearby(plr)
         local isQuestion = message:sub(-1) == "?"
@@ -259,9 +255,12 @@ local function setupPlayerChat(plr)
             return
         end
         
-        -- All Chat normal (só se não tiver Voice TTS ou AI processando)
+        -- All Chat normal (lê se estiver ativado e Voice TTS não estiver processando)
         if allChatEnabled and not aiProcessing then
+            print("[All Chat] Adicionando:", plr.DisplayName, "disse:", message)
             addToQueue(plr.DisplayName .. " disse: " .. message)
+        else
+            print("[DEBUG] All Chat desativado ou AI processando")
         end
     end)
 end
