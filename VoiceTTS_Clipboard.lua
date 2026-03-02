@@ -19,7 +19,8 @@ local MainFrame = Instance.new("Frame")
 MainFrame.Parent = ScreenGui
 MainFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 MainFrame.Position = UDim2.new(0.02, 0, 0.3, 0)
-MainFrame.Size = UDim2.new(0, 220, 0, 145)
+MainFrame.Size = UDim2.new(0, 220, 0, 140)
+MainFrame.Visible = true
 
 local UICorner = Instance.new("UICorner")
 UICorner.CornerRadius = UDim.new(0, 8)
@@ -110,14 +111,17 @@ ttsIndicatorCorner.CornerRadius = UDim.new(1, 0)
 ttsIndicatorCorner.Parent = ttsIndicator
 
 local allChatBtn = Instance.new("TextButton")
+allChatBtn.Name = "AllChatButton"
 allChatBtn.Parent = MainFrame
 allChatBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
-allChatBtn.Position = UDim2.new(0, 10, 0, 95)
+allChatBtn.Position = UDim2.new(0, 10, 0, 90)
 allChatBtn.Size = UDim2.new(0, 200, 0, 35)
 allChatBtn.Font = Enum.Font.Gotham
 allChatBtn.Text = "All Chat TTS"
 allChatBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 allChatBtn.TextSize = 13
+allChatBtn.Visible = true
+allChatBtn.ZIndex = 2
 
 local allChatBtnCorner = Instance.new("UICorner")
 allChatBtnCorner.CornerRadius = UDim.new(0, 6)
@@ -197,4 +201,9 @@ end)
 
 ScreenGui.Parent = game.CoreGui
 
+wait(0.1)
+allChatBtn.Visible = true
+MainFrame.Visible = true
+
 print("[VoiceTTS] Carregado! Z=Menu")
+print("[DEBUG] Botoes criados: Voice TTS e All Chat TTS")
