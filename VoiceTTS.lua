@@ -20,7 +20,7 @@ local MainFrame = Instance.new("Frame")
 MainFrame.Parent = ScreenGui
 MainFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 MainFrame.Position = UDim2.new(0.02, 0, 0.3, 0)
-MainFrame.Size = UDim2.new(0, 220, 0, 140)
+MainFrame.Size = UDim2.new(0, 220, 0, 185)
 
 local UICorner = Instance.new("UICorner")
 UICorner.CornerRadius = UDim.new(0, 8)
@@ -135,18 +135,85 @@ local allChatIndicatorCorner = Instance.new("UICorner")
 allChatIndicatorCorner.CornerRadius = UDim.new(1, 0)
 allChatIndicatorCorner.Parent = allChatIndicator
 
+local speedLabel = Instance.new("TextLabel")
+speedLabel.Parent = MainFrame
+speedLabel.BackgroundTransparency = 1
+speedLabel.Position = UDim2.new(0, 10, 0, 140)
+speedLabel.Size = UDim2.new(1, -20, 0, 15)
+speedLabel.Font = Enum.Font.Gotham
+speedLabel.Text = "Velocidade: 1.0x"
+speedLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+speedLabel.TextSize = 11
+speedLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+local speedTrack = Instance.new("Frame")
+speedTrack.Parent = MainFrame
+speedTrack.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+speedTrack.Position = UDim2.new(0, 10, 0, 160)
+speedTrack.Size = UDim2.new(0, 200, 0, 6)
+speedTrack.BorderSizePixel = 0
+
+local speedTrackCorner = Instance.new("UICorner")
+speedTrackCorner.CornerRadius = UDim.new(1, 0)
+speedTrackCorner.Parent = speedTrack
+
+local speedHandle = Instance.new("Frame")
+speedHandle.Parent = speedTrack
+speedHandle.BackgroundColor3 = Color3.fromRGB(50, 255, 50)
+speedHandle.Position = UDim2.new(0, -6, 0.5, -6)
+speedHandle.Size = UDim2.new(0, 12, 0, 12)
+speedHandle.BorderSizePixel = 0
+
+local speedHandleCorner = Instance.new("UICorner")
+speedHandleCorner.CornerRadius = UDim.new(1, 0)
+speedHandleCorner.Parent = speedHandle
+
+local speedDragging = false
+
+speedHandle.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        speedDragging = true
+    end
+end)
+
+UIS.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        speedDragging = false
+    end
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if speedDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local mousePos = UIS:GetMouseLocation()
+        local trackPos = speedTrack.AbsolutePosition.X
+        local trackSize = speedTrack.AbsoluteSize.X
+        local relativePos = math.clamp(mousePos.X - trackPos, 0, trackSize)
+        local percentage = relativePos / trackSize
+        
+        speedHandle.Position = UDim2.new(percentage, -6, 0.5, -6)
+        voiceSpeed = 1.0 + (percentage * 1.5)
+        speedLabel.Text = string.format("Velocidade: %.1fx", voiceSpeed)
+        
+        pcall(function()
+            writefile("tts_speed.txt", tostring(voiceSpeed))
+        end)
+    end
+end)
+
 local ttsEnabled = false
 local allChatEnabled = false
 local toggleKey = Enum.KeyCode.Z
 local messageQueue = {}
 local spokenMessages = {}
+local voiceSpeed = 1.0
 
-local function addToQueue(text)
+local function addToQueue(text, speed)
     if spokenMessages[text] then return end
     table.insert(messageQueue, text)
     local queueText = table.concat(messageQueue, "\n")
     pcall(function()
         writefile("tts_message.txt", queueText)
+        writefile("tts_speed.txt", tostring(speed or voiceSpeed))
     end)
 end
 
@@ -199,19 +266,8 @@ player.Chatted:Connect(function(message)
     addToQueue(message)
 end)
 
-for _, plr in pairs(game.Players:GetPlayers()) do
-    if plr ~= player then
-        plr.Chatted:Connect(function(message)
-            if allChatEnabled then
-                local displayName = plr.DisplayName
-                print("[DEBUG]", displayName, ":", message)
-                addToQueue(displayName .. " disse: " .. message)
-            end
-        end)
-    end
-end
-
-game.Players.PlayerAdded:Connect(function(plr)
+local function setupPlayerChat(plr)
+    if plr == player then return end
     plr.Chatted:Connect(function(message)
         if allChatEnabled then
             local displayName = plr.DisplayName
@@ -219,6 +275,15 @@ game.Players.PlayerAdded:Connect(function(plr)
             addToQueue(displayName .. " disse: " .. message)
         end
     end)
+end
+
+for _, plr in pairs(game.Players:GetPlayers()) do
+    setupPlayerChat(plr)
+end
+
+game.Players.PlayerAdded:Connect(function(plr)
+    print("[DEBUG] Player entrou:", plr.DisplayName)
+    setupPlayerChat(plr)
 end)
 
 UIS.InputBegan:Connect(function(input, gameProcessed)
