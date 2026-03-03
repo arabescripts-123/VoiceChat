@@ -4,7 +4,6 @@ print("[ChatVoice] Iniciando...")
 local player = game.Players.LocalPlayer
 local UIS = game:GetService("UserInputService")
 local TeleportService = game:GetService("TeleportService")
-local TextChatService = game:GetService("TextChatService")
 
 pcall(function()
     if game.CoreGui:FindFirstChild("ChatVoiceGui") then
@@ -12,17 +11,12 @@ pcall(function()
     end
 end)
 
-local workspacePath = os.getenv("LOCALAPPDATA") .. "\\Solara\\workspace\\"
-
-local function writeFile(filename, content)
-    writefile(workspacePath .. filename, content)
+if not isfolder("ChatVoice") then
+    makefolder("ChatVoice")
 end
 
-local function readFile(filename)
-    if isfile(workspacePath .. filename) then
-        return readfile(workspacePath .. filename)
-    end
-    return ""
+local function writeFile(filename, content)
+    writefile("ChatVoice/" .. filename, content)
 end
 
 local ScreenGui = Instance.new("ScreenGui")
@@ -135,43 +129,78 @@ local aiChatBtn, aiChatIndicator = createButton("AI Chat", UDim2.new(0, 10, 0, 1
 local voiceTTSEnabled = false
 local allChatEnabled = false
 local aiChatEnabled = false
+local lastAIResponse = ""
 
-local messageQueue = {}
+local function readFile(filename)
+    if isfile("ChatVoice/" .. filename) then
+        return readfile("ChatVoice/" .. filename)
+    end
+    return ""
+end
+
+local function sendChat(message)
+    game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(message, "All")
+end
+
+local function checkAIResponse()
+    spawn(function()
+        while true do
+            wait(1)
+            if aiChatEnabled then
+                local response = readFile("ai_response.txt")
+                if response ~= "" and response ~= lastAIResponse then
+                    lastAIResponse = response
+                    sendChat(response)
+                    writeFile("ai_response.txt", "")
+                end
+            end
+        end
+    end)
+end
 
 local function addToQueue(message)
-    table.insert(messageQueue, message)
     writeFile("tts_message.txt", message)
 end
 
 local function setupChatListener()
-    local TextChannels = TextChatService:FindFirstChild("TextChannels")
-    if not TextChannels then return end
-    
-    local RBXGeneral = TextChannels:FindFirstChild("RBXGeneral")
-    if not RBXGeneral then return end
-    
-    RBXGeneral.MessageReceived:Connect(function(message)
-        local speaker = message.TextSource
-        if not speaker then return end
-        
-        local speakerPlayer = game.Players:GetPlayerByUserId(speaker.UserId)
-        if not speakerPlayer then return end
-        
-        local text = message.Text
-        local isOwnMessage = speakerPlayer == player
-        
-        if isOwnMessage and voiceTTSEnabled then
-            addToQueue(text)
-        elseif not isOwnMessage and aiChatEnabled and text:sub(-1) == "?" then
-            if speakerPlayer.Character and player.Character then
-                local distance = (speakerPlayer.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
-                if distance <= 50 then
-                    writeFile("ai_question.txt", speakerPlayer.Name .. ": " .. text)
+    for _, plr in pairs(game.Players:GetPlayers()) do
+        if plr ~= player then
+            plr.Chatted:Connect(function(msg)
+                if allChatEnabled then
+                    addToQueue(plr.Name .. " disse: " .. msg)
                 end
-            end
-        elseif not isOwnMessage and allChatEnabled then
-            addToQueue(speakerPlayer.Name .. " disse: " .. text)
+                
+                if aiChatEnabled and msg:sub(-1) == "?" then
+                    pcall(function()
+                        if plr.Character and player.Character then
+                            local dist = (plr.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
+                            if dist <= 50 then
+                                writeFile("ai_question.txt", plr.Name .. ": " .. msg)
+                            end
+                        end
+                    end)
+                end
+            end)
         end
+    end
+    
+    game.Players.PlayerAdded:Connect(function(plr)
+        plr.Chatted:Connect(function(msg)
+            if allChatEnabled then
+                addToQueue(plr.Name .. " disse: " .. msg)
+            end
+            
+            if aiChatEnabled and msg:sub(-1) == "?" then
+                pcall(function()
+                    if plr.Character and player.Character then
+                        local dist = (plr.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
+                        if dist <= 50 then
+                            writeFile("ai_question.txt", plr.Name .. ": " .. msg)
+                        end
+                    end
+                end)
+            end
+        end)
     end)
 end
 
@@ -182,6 +211,8 @@ local function setupCommandListener()
             if voiceTTSEnabled then
                 addToQueue(ttsMessage)
             end
+        elseif voiceTTSEnabled then
+            addToQueue(message)
         end
     end)
 end
@@ -208,19 +239,16 @@ rejoinBtn.MouseButton1Click:Connect(function()
     TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, player)
 end)
 
-local toggleKey = Enum.KeyCode.Z
-
 UIS.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
-    
-    if input.KeyCode == toggleKey then
+    if input.KeyCode == Enum.KeyCode.Z then
         MainFrame.Visible = not MainFrame.Visible
     end
 end)
 
 ScreenGui.Parent = game.CoreGui
-
 setupChatListener()
 setupCommandListener()
+checkAIResponse()
 
 print("[ChatVoice] Carregado! Z=Menu /tts=Falar")
