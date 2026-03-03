@@ -1,27 +1,27 @@
--- AS ChatVoice Script
-print("[AS ChatVoice] Iniciando...")
+-- Voice TTS + AI Chat
+print("[VoiceTTS] Iniciando...")
 
 local player = game.Players.LocalPlayer
 local UIS = game:GetService("UserInputService")
-local TeleportService = game:GetService("TeleportService")
+local HttpService = game:GetService("HttpService")
 
 pcall(function()
-    if game.CoreGui:FindFirstChild("ASChatVoiceGui") then
-        game.CoreGui:FindFirstChild("ASChatVoiceGui"):Destroy()
+    if game.CoreGui:FindFirstChild("VoiceTTSGui") then
+        game.CoreGui:FindFirstChild("VoiceTTSGui"):Destroy()
     end
 end)
 
-task.wait(1)
-
+-- GUI
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "ASChatVoiceGui"
+ScreenGui.Name = "VoiceTTSGui"
 ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = game.CoreGui
 
 local MainFrame = Instance.new("Frame")
 MainFrame.Parent = ScreenGui
 MainFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 MainFrame.Position = UDim2.new(0.02, 0, 0.3, 0)
-MainFrame.Size = UDim2.new(0, 220, 0, 100)
+MainFrame.Size = UDim2.new(0, 220, 0, 230)
 
 local UICorner = Instance.new("UICorner")
 UICorner.CornerRadius = UDim.new(0, 8)
@@ -32,22 +32,24 @@ UIStroke.Parent = MainFrame
 UIStroke.Color = Color3.fromRGB(0, 0, 0)
 UIStroke.Thickness = 3
 
+-- Title
 local Title = Instance.new("TextLabel")
 Title.Parent = MainFrame
 Title.BackgroundTransparency = 1
-Title.Size = UDim2.new(1, -80, 0, 40)
+Title.Size = UDim2.new(1, -40, 0, 40)
 Title.Font = Enum.Font.GothamBold
-Title.Text = "AS ChatVoice"
+Title.Text = "Voice TTS + AI"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 18
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Position = UDim2.new(0, 10, 0, 0)
 Title.Active = true
 
+-- Rejoin Button
 local rejoinBtn = Instance.new("TextButton")
 rejoinBtn.Parent = MainFrame
 rejoinBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-rejoinBtn.Position = UDim2.new(1, -70, 0, 5)
+rejoinBtn.Position = UDim2.new(1, -40, 0, 5)
 rejoinBtn.Size = UDim2.new(0, 35, 0, 30)
 rejoinBtn.Font = Enum.Font.GothamBold
 rejoinBtn.Text = "R"
@@ -58,6 +60,7 @@ local rejoinCorner = Instance.new("UICorner")
 rejoinCorner.CornerRadius = UDim.new(0, 6)
 rejoinCorner.Parent = rejoinBtn
 
+-- Dragging
 local dragging, dragInput, dragStart, startPos
 
 Title.InputBegan:Connect(function(input)
@@ -86,177 +89,193 @@ UIS.InputChanged:Connect(function(input)
     end
 end)
 
-local SettingsBtn = Instance.new("TextButton")
-SettingsBtn.Parent = MainFrame
-SettingsBtn.BackgroundTransparency = 1
-SettingsBtn.Position = UDim2.new(1, -35, 0, 5)
-SettingsBtn.Size = UDim2.new(0, 30, 0, 30)
-SettingsBtn.Font = Enum.Font.GothamBold
-SettingsBtn.Text = "⚙"
-SettingsBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-SettingsBtn.TextSize = 20
-
-local SettingsFrame = Instance.new("Frame")
-SettingsFrame.Parent = ScreenGui
-SettingsFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-SettingsFrame.Position = UDim2.new(0.02, 230, 0.3, 0)
-SettingsFrame.Size = UDim2.new(0, 180, 0, 100)
-SettingsFrame.Visible = false
-
-local SettingsCorner = Instance.new("UICorner")
-SettingsCorner.CornerRadius = UDim.new(0, 8)
-SettingsCorner.Parent = SettingsFrame
-
-local SettingsStroke = Instance.new("UIStroke")
-SettingsStroke.Parent = SettingsFrame
-SettingsStroke.Color = Color3.fromRGB(0, 0, 0)
-SettingsStroke.Thickness = 3
-
-local KeyLabel = Instance.new("TextLabel")
-KeyLabel.Parent = SettingsFrame
-KeyLabel.BackgroundTransparency = 1
-KeyLabel.Position = UDim2.new(0, 10, 0, 10)
-KeyLabel.Size = UDim2.new(1, -20, 0, 25)
-KeyLabel.Font = Enum.Font.Gotham
-KeyLabel.Text = "Tecla Menu:"
-KeyLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-KeyLabel.TextSize = 12
-KeyLabel.TextXAlignment = Enum.TextXAlignment.Left
-
-local KeyBox = Instance.new("TextBox")
-KeyBox.Parent = SettingsFrame
-KeyBox.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
-KeyBox.Position = UDim2.new(0, 10, 0, 45)
-KeyBox.Size = UDim2.new(1, -20, 0, 35)
-KeyBox.Font = Enum.Font.Gotham
-KeyBox.Text = "Z"
-KeyBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-KeyBox.TextSize = 14
-
-local btnCorner = Instance.new("UICorner")
-btnCorner.CornerRadius = UDim.new(0, 6)
-btnCorner.Parent = KeyBox
-
-local toggleKey = Enum.KeyCode.Z
-local comando1Enabled = false
-
-SettingsBtn.MouseButton1Click:Connect(function()
-    SettingsFrame.Visible = not SettingsFrame.Visible
-end)
-
-local function createButton(text, position)
-    local Button = Instance.new("TextButton")
-    local BtnCorner = Instance.new("UICorner")
-    local Indicator = Instance.new("Frame")
-    local IndicatorCorner = Instance.new("UICorner")
+-- Buttons
+local function createButton(name, position, yPos)
+    local btn = Instance.new("TextButton")
+    btn.Parent = MainFrame
+    btn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+    btn.Position = UDim2.new(0, 10, 0, yPos)
+    btn.Size = UDim2.new(0, 200, 0, 35)
+    btn.Font = Enum.Font.Gotham
+    btn.Text = name
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.TextSize = 13
     
-    Button.Parent = MainFrame
-    Button.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
-    Button.Position = position
-    Button.Size = UDim2.new(0, 200, 0, 35)
-    Button.Font = Enum.Font.Gotham
-    Button.Text = text
-    Button.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Button.TextSize = 13
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = btn
     
-    BtnCorner.CornerRadius = UDim.new(0, 6)
-    BtnCorner.Parent = Button
+    local indicator = Instance.new("Frame")
+    indicator.Parent = btn
+    indicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+    indicator.Position = UDim2.new(1, -25, 0.5, -8)
+    indicator.Size = UDim2.new(0, 16, 0, 16)
+    indicator.BorderSizePixel = 0
     
-    Indicator.Parent = Button
-    Indicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-    Indicator.Position = UDim2.new(1, -25, 0.5, -8)
-    Indicator.Size = UDim2.new(0, 16, 0, 16)
-    Indicator.BorderSizePixel = 0
+    local indicatorCorner = Instance.new("UICorner")
+    indicatorCorner.CornerRadius = UDim.new(1, 0)
+    indicatorCorner.Parent = indicator
     
-    IndicatorCorner.CornerRadius = UDim.new(1, 0)
-    IndicatorCorner.Parent = Indicator
-    
-    return Button, Indicator
+    return btn, indicator
 end
 
-local comando1Btn, comando1Indicator = createButton("Chat to Voice", UDim2.new(0, 10, 0, 50))
+local ttsBtn, ttsIndicator = createButton("Voice TTS", 0, 50)
+local allChatBtn, allChatIndicator = createButton("All Chat TTS", 0, 95)
+local aiChatBtn, aiChatIndicator = createButton("AI Chat", 0, 140)
 
-local function sendToTTS(playerName, message)
-    local HttpService = game:GetService("HttpService")
-    local url = "http://127.0.0.1:5000/tts"
-    local data = HttpService:JSONEncode({player = playerName, text = message})
-    
+-- Variables
+local ttsEnabled = false
+local allChatEnabled = false
+local aiChatEnabled = false
+local aiProcessing = false
+local messageQueue = {}
+local spokenMessages = {}
+local PROXIMITY_DISTANCE = 50
+
+local function addToQueue(text)
+    if spokenMessages[text] then return end
+    table.insert(messageQueue, text)
     pcall(function()
-        local response = request({
-            Url = url,
-            Method = "POST",
-            Headers = {["Content-Type"] = "application/json"},
-            Body = data
-        })
+        writefile("tts_message.txt", table.concat(messageQueue, "\n"))
     end)
 end
 
-local function setupChatListener()
-    local TextChatService = game:GetService("TextChatService")
-    local Players = game:GetService("Players")
-    
-    if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
-        TextChatService.MessageReceived:Connect(function(message)
-            if comando1Enabled and message.TextSource then
-                local playerName = message.TextSource.Name
-                local text = message.Text
-                sendToTTS(playerName, text)
-            end
-        end)
-    else
-        local ReplicatedStorage = game:GetService("ReplicatedStorage")
-        local DefaultChatSystemChatEvents = ReplicatedStorage:WaitForChild("DefaultChatSystemChatEvents", 5)
-        if DefaultChatSystemChatEvents then
-            local OnMessageDoneFiltering = DefaultChatSystemChatEvents:WaitForChild("OnMessageDoneFiltering", 5)
-            if OnMessageDoneFiltering then
-                OnMessageDoneFiltering.OnClientEvent:Connect(function(data)
-                    if comando1Enabled and data then
-                        local playerName = data.FromSpeaker or "Unknown"
-                        local text = data.Message or ""
-                        sendToTTS(playerName, text)
-                    end
-                end)
-            end
-        end
-    end
+local function clearQueue()
+    messageQueue = {}
+    spokenMessages = {}
+    pcall(function()
+        writefile("tts_message.txt", "")
+    end)
 end
 
-setupChatListener()
-
-comando1Btn.MouseButton1Click:Connect(function()
-    comando1Enabled = not comando1Enabled
-    if comando1Enabled then
-        comando1Indicator.BackgroundColor3 = Color3.fromRGB(50, 255, 50)
-    else
-        comando1Indicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+local function isPlayerNearby(plr)
+    if not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") then
+        return false
     end
+    if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then
+        return false
+    end
+    
+    local distance = (plr.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
+    return distance <= PROXIMITY_DISTANCE
+end
+
+local function askAI(question, playerName)
+    if aiProcessing then return end
+    aiProcessing = true
+    
+    print("[AI] Pergunta de", playerName, ":", question)
+    
+    pcall(function()
+        writefile("ai_question.txt", playerName .. " perguntou: " .. question)
+    end)
+    
+    spawn(function()
+        wait(5)
+        aiProcessing = false
+    end)
+end
+
+-- Button Events
+ttsBtn.MouseButton1Click:Connect(function()
+    ttsEnabled = not ttsEnabled
+    ttsIndicator.BackgroundColor3 = ttsEnabled and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
+    pcall(function()
+        writefile("tts_enabled.txt", ttsEnabled and "1" or "0")
+    end)
+    if ttsEnabled then
+        clearQueue()
+        addToQueue("Oi Xexelento")
+    else
+        clearQueue()
+    end
+    print("[TTS]", ttsEnabled and "Ativado" or "Desativado")
 end)
 
-KeyBox.FocusLost:Connect(function()
-    local text = KeyBox.Text:upper()
-    local success, key = pcall(function() return Enum.KeyCode[text] end)
-    if success and key then
-        toggleKey = key
-        KeyBox.Text = text
-    else
-        KeyBox.Text = "Z"
-        toggleKey = Enum.KeyCode.Z
-    end
+allChatBtn.MouseButton1Click:Connect(function()
+    allChatEnabled = not allChatEnabled
+    allChatIndicator.BackgroundColor3 = allChatEnabled and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
+    pcall(function()
+        writefile("all_chat_enabled.txt", allChatEnabled and "1" or "0")
+    end)
+    clearQueue()
+    print("[All Chat]", allChatEnabled and "Ativado" or "Desativado")
+end)
+
+aiChatBtn.MouseButton1Click:Connect(function()
+    aiChatEnabled = not aiChatEnabled
+    aiChatIndicator.BackgroundColor3 = aiChatEnabled and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
+    pcall(function()
+        writefile("ai_enabled.txt", aiChatEnabled and "1" or "0")
+    end)
+    clearQueue()
+    print("[AI]", aiChatEnabled and "Ativado" or "Desativado")
 end)
 
 rejoinBtn.MouseButton1Click:Connect(function()
+    local TeleportService = game:GetService("TeleportService")
     TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, player)
 end)
 
+-- Chat Events
+player.Chatted:Connect(function(message)
+    -- Prefixo /tts para falar sem aparecer no chat
+    if message:sub(1, 5) == "/tts " then
+        if ttsEnabled then
+            local text = message:sub(6)
+            print("[TTS] Você (privado):", text)
+            clearQueue()
+            addToQueue(text)
+        end
+        return
+    end
+    
+    -- Voice TTS normal (aparece no chat)
+    if not ttsEnabled then return end
+    if message:sub(1, 1) == "/" then return end
+    print("[TTS] Você:", message)
+    clearQueue()
+    addToQueue(message)
+end)
+
+local function setupPlayerChat(plr)
+    if plr == player then return end
+    
+    plr.Chatted:Connect(function(message)
+        print("[DEBUG] Player", plr.DisplayName, "falou:", message)
+        
+        local isNearby = isPlayerNearby(plr)
+        local isQuestion = message:sub(-1) == "?"
+        
+        -- AI Chat tem prioridade sobre All Chat
+        if aiChatEnabled and isNearby and isQuestion then
+            print("[AI] Detectou pergunta próxima!")
+            clearQueue()
+            askAI(message, plr.DisplayName)
+            return
+        end
+        
+        -- All Chat normal (lê se estiver ativado e Voice TTS não estiver processando)
+        if allChatEnabled and not aiProcessing then
+            print("[All Chat] Adicionando:", plr.DisplayName, "disse:", message)
+            addToQueue(plr.DisplayName .. " disse: " .. message)
+        else
+            print("[DEBUG] All Chat desativado ou AI processando")
+        end
+    end)
+end
+
+for _, plr in pairs(game.Players:GetPlayers()) do
+    setupPlayerChat(plr)
+end
+
+game.Players.PlayerAdded:Connect(setupPlayerChat)
+
 UIS.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
-    
-    if input.KeyCode == toggleKey then
+    if input.KeyCode == Enum.KeyCode.Z then
         MainFrame.Visible = not MainFrame.Visible
-        SettingsFrame.Visible = false
     end
 end)
 
-ScreenGui.Parent = game.CoreGui
-
-print("[AS ChatVoice] Carregado! Z=Menu")
+print("[VoiceTTS + AI] Carregado! Z=Menu")
