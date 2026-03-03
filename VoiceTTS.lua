@@ -163,11 +163,12 @@ local function addToQueue(message)
 end
 
 local function setupChatListener()
+    -- Escuta mensagens de OUTROS players
     for _, plr in pairs(game.Players:GetPlayers()) do
         if plr ~= player then
             plr.Chatted:Connect(function(msg)
                 if allChatEnabled then
-                    addToQueue(plr.Name .. " disse: " .. msg)
+                    addToQueue(plr.Name .. " falou: " .. msg)
                 end
                 
                 if aiChatEnabled and msg:sub(-1) == "?" then
@@ -187,7 +188,7 @@ local function setupChatListener()
     game.Players.PlayerAdded:Connect(function(plr)
         plr.Chatted:Connect(function(msg)
             if allChatEnabled then
-                addToQueue(plr.Name .. " disse: " .. msg)
+                addToQueue(plr.Name .. " falou: " .. msg)
             end
             
             if aiChatEnabled and msg:sub(-1) == "?" then
@@ -206,13 +207,15 @@ end
 
 local function setupCommandListener()
     player.Chatted:Connect(function(message)
+        -- Voice TTS: Só fala com /tts
         if message:sub(1, 5) == "/tts " then
             local ttsMessage = message:sub(6)
-            if voiceTTSEnabled then
-                addToQueue(ttsMessage)
-            end
-        elseif voiceTTSEnabled then
-            addToQueue(message)
+            addToQueue(ttsMessage)
+        end
+        
+        -- All Chat TTS: Fala suas próprias mensagens também
+        if allChatEnabled and message:sub(1, 5) ~= "/tts " then
+            addToQueue(player.Name .. " falou: " .. message)
         end
     end)
 end
