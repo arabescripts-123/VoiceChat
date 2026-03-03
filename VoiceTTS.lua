@@ -183,12 +183,6 @@ ttsBtn.MouseButton1Click:Connect(function()
     pcall(function()
         writefile("tts_enabled.txt", ttsEnabled and "1" or "0")
     end)
-    if ttsEnabled then
-        clearQueue()
-        addToQueue("Oi Xexelento")
-    else
-        clearQueue()
-    end
     print("[TTS]", ttsEnabled and "Ativado" or "Desativado")
 end)
 
@@ -255,12 +249,10 @@ local function setupPlayerChat(plr)
             return
         end
         
-        -- All Chat normal (lê se estiver ativado e Voice TTS não estiver processando)
-        if allChatEnabled and not aiProcessing then
+        -- All Chat funciona independentemente
+        if allChatEnabled then
             print("[All Chat] Adicionando:", plr.DisplayName, "disse:", message)
             addToQueue(plr.DisplayName .. " disse: " .. message)
-        else
-            print("[DEBUG] All Chat desativado ou AI processando")
         end
     end)
 end
