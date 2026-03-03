@@ -19,6 +19,13 @@ local function writeFile(filename, content)
     writefile("ChatVoice/" .. filename, content)
 end
 
+local function readFile(filename)
+    if isfile("ChatVoice/" .. filename) then
+        return readfile("ChatVoice/" .. filename)
+    end
+    return ""
+end
+
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "ChatVoiceGui"
 ScreenGui.ResetOnSpawn = false
@@ -130,16 +137,43 @@ local voiceTTSEnabled = false
 local allChatEnabled = false
 local aiChatEnabled = false
 local lastAIResponse = ""
-
-local function readFile(filename)
-    if isfile("ChatVoice/" .. filename) then
-        return readfile("ChatVoice/" .. filename)
-    end
-    return ""
-end
+local messageQueue = {}
+local queueIndex = 1
 
 local function sendChat(message)
     game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(message, "All")
+end
+
+local function addToQueue(message)
+    table.insert(messageQueue, message)
+    print("[ChatVoice] Fila: " .. message)
+end
+
+local function updateQueueFile()
+    if #messageQueue > 0 then
+        writeFile("tts_message.txt", messageQueue[1])
+        writeFile("queue_index.txt", tostring(queueIndex))
+    else
+        writeFile("tts_message.txt", "")
+    end
+end
+
+local function checkQueueProcessed()
+    spawn(function()
+        while true do
+            wait(0.5)
+            if #messageQueue > 0 then
+                local processedIndex = tonumber(readFile("queue_processed.txt")) or 0
+                if processedIndex >= queueIndex then
+                    table.remove(messageQueue, 1)
+                    queueIndex = queueIndex + 1
+                    updateQueueFile()
+                end
+            else
+                updateQueueFile()
+            end
+        end
+    end)
 end
 
 local function checkAIResponse()
@@ -151,6 +185,7 @@ local function checkAIResponse()
                 if response ~= "" and response ~= lastAIResponse then
                     lastAIResponse = response
                     sendChat(response)
+                    addToQueue(response)
                     writeFile("ai_response.txt", "")
                 end
             end
@@ -158,12 +193,7 @@ local function checkAIResponse()
     end)
 end
 
-local function addToQueue(message)
-    writeFile("tts_message.txt", message)
-end
-
 local function setupChatListener()
-    -- Escuta mensagens de OUTROS players
     for _, plr in pairs(game.Players:GetPlayers()) do
         if plr ~= player then
             plr.Chatted:Connect(function(msg)
@@ -207,13 +237,11 @@ end
 
 local function setupCommandListener()
     player.Chatted:Connect(function(message)
-        -- Voice TTS: Só fala com /tts
         if message:sub(1, 5) == "/tts " then
             local ttsMessage = message:sub(6)
             addToQueue(ttsMessage)
         end
         
-        -- All Chat TTS: Fala suas próprias mensagens também
         if allChatEnabled and message:sub(1, 5) ~= "/tts " then
             addToQueue(player.Name .. " falou: " .. message)
         end
@@ -253,5 +281,6 @@ ScreenGui.Parent = game.CoreGui
 setupChatListener()
 setupCommandListener()
 checkAIResponse()
+checkQueueProcessed()
 
 print("[ChatVoice] Carregado! Z=Menu /tts=Falar")
