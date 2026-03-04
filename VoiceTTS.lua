@@ -22,7 +22,7 @@ pcall(function()
     end
 end)
 
--- GUI (mesmo código anterior)
+-- GUI
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "VoiceTTSGui"
 ScreenGui.ResetOnSpawn = false
@@ -32,7 +32,7 @@ local MainFrame = Instance.new("Frame")
 MainFrame.Parent = ScreenGui
 MainFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 MainFrame.Position = UDim2.new(0.02, 0, 0.3, 0)
-MainFrame.Size = UDim2.new(0, 220, 0, 230)
+MainFrame.Size = UDim2.new(0, 220, 0, 275)
 
 local UICorner = Instance.new("UICorner")
 UICorner.CornerRadius = UDim.new(0, 8)
@@ -128,9 +128,40 @@ local function createButton(name, position, yPos)
     return btn, indicator
 end
 
+local function createModeButton(name, xPos, yPos)
+    local btn = Instance.new("TextButton")
+    btn.Parent = MainFrame
+    btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    btn.Position = UDim2.new(0, xPos, 0, yPos)
+    btn.Size = UDim2.new(0, 95, 0, 30)
+    btn.Font = Enum.Font.Gotham
+    btn.Text = name
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.TextSize = 12
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = btn
+    
+    local indicator = Instance.new("Frame")
+    indicator.Parent = btn
+    indicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+    indicator.Position = UDim2.new(1, -20, 0.5, -6)
+    indicator.Size = UDim2.new(0, 12, 0, 12)
+    indicator.BorderSizePixel = 0
+    
+    local indicatorCorner = Instance.new("UICorner")
+    indicatorCorner.CornerRadius = UDim.new(1, 0)
+    indicatorCorner.Parent = indicator
+    
+    return btn, indicator
+end
+
 local ttsBtn, ttsIndicator = createButton("Voice TTS", 0, 50)
 local allChatBtn, allChatIndicator = createButton("All Chat TTS", 0, 95)
-local aiChatBtn, aiChatIndicator = createButton("AI Chat", 0, 140)
+local filaBtn, filaIndicator = createModeButton("Fila", 10, 140)
+local newBtn, newIndicator = createModeButton("New", 115, 140)
+local aiChatBtn, aiChatIndicator = createButton("AI Chat", 0, 185)
 
 -- Variables
 local ttsEnabled = false
@@ -139,9 +170,15 @@ local aiChatEnabled = false
 local aiProcessing = false
 local PROXIMITY_DISTANCE = 50
 
+-- Queue System
+local queueMode = true
+local messageQueue = {}
+local isProcessingQueue = false
+local currentTTSId = 0
+
 -- HTTP Functions
-local function sendTTS(text)
-    print("[DEBUG] Enviando TTS:", text)
+local function sendTTS(text, ttsId)
+    print("[DEBUG] Enviando TTS:", text, "ID:", ttsId)
     task.spawn(function()
         local success, result = pcall(function()
             local response = request({
@@ -155,11 +192,41 @@ local function sendTTS(text)
             return response
         end)
         if success then
-            print("[TTS] Sucesso!")
+            print("[TTS] Sucesso! ID:", ttsId)
         else
             warn("[TTS] Erro:", result)
         end
     end)
+end
+
+local function processQueue()
+    if isProcessingQueue then return end
+    isProcessingQueue = true
+    
+    task.spawn(function()
+        while #messageQueue > 0 and allChatEnabled and queueMode do
+            local msg = table.remove(messageQueue, 1)
+            sendTTS(msg.text, msg.id)
+            task.wait(3)
+        end
+        isProcessingQueue = false
+    end)
+end
+
+local function handleTTS(text)
+    currentTTSId = currentTTSId + 1
+    local ttsId = currentTTSId
+    
+    if queueMode then
+        table.insert(messageQueue, {text = text, id = ttsId})
+        print("[FILA] Adicionado:", text, "| Total:", #messageQueue)
+        processQueue()
+    else
+        messageQueue = {}
+        isProcessingQueue = false
+        print("[NEW] Enviando:", text)
+        sendTTS(text, ttsId)
+    end
 end
 
 local function sendAI(question, playerName)
@@ -203,11 +270,31 @@ local function isPlayerNearby(plr)
 end
 
 -- Button Events
+filaBtn.MouseButton1Click:Connect(function()
+    if not queueMode then
+        queueMode = true
+        filaIndicator.BackgroundColor3 = Color3.fromRGB(50, 255, 50)
+        newIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+        print("[MODO] Fila ativado")
+    end
+end)
+
+newBtn.MouseButton1Click:Connect(function()
+    if queueMode then
+        queueMode = false
+        messageQueue = {}
+        isProcessingQueue = false
+        filaIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+        newIndicator.BackgroundColor3 = Color3.fromRGB(50, 255, 50)
+        print("[MODO] New ativado")
+    end
+end)
+
 ttsBtn.MouseButton1Click:Connect(function()
     ttsEnabled = not ttsEnabled
     ttsIndicator.BackgroundColor3 = ttsEnabled and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
     if ttsEnabled then
-        sendTTS("Oi Xexelento")
+        handleTTS("Oi Xexelento")
     end
     print("[TTS]", ttsEnabled and "Ativado" or "Desativado")
 end)
@@ -215,6 +302,16 @@ end)
 allChatBtn.MouseButton1Click:Connect(function()
     allChatEnabled = not allChatEnabled
     allChatIndicator.BackgroundColor3 = allChatEnabled and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
+    
+    if allChatEnabled then
+        queueMode = true
+        filaIndicator.BackgroundColor3 = Color3.fromRGB(50, 255, 50)
+        newIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+    else
+        messageQueue = {}
+        isProcessingQueue = false
+    end
+    
     print("[All Chat]", allChatEnabled and "Ativado" or "Desativado")
 end)
 
@@ -234,14 +331,14 @@ player.Chatted:Connect(function(message)
     if message:sub(1, 5) == "/tts " then
         if ttsEnabled then
             local text = message:sub(6)
-            sendTTS(text)
+            handleTTS(text)
         end
         return
     end
     
     if not ttsEnabled then return end
     if message:sub(1, 1) == "/" then return end
-    sendTTS(message)
+    handleTTS(message)
 end)
 
 local function setupPlayerChat(plr)
@@ -249,7 +346,6 @@ local function setupPlayerChat(plr)
     
     plr.Chatted:Connect(function(message)
         print("[DEBUG] Player", plr.DisplayName, "falou:", message)
-        print("[DEBUG] All Chat ativado?", allChatEnabled)
         
         local isNearby = isPlayerNearby(plr)
         local isQuestion = message:sub(-1) == "?"
@@ -263,7 +359,7 @@ local function setupPlayerChat(plr)
         if allChatEnabled and not aiProcessing then
             local textToSpeak = plr.DisplayName .. " falou " .. message
             print("[DEBUG] Falando:", textToSpeak)
-            sendTTS(textToSpeak)
+            handleTTS(textToSpeak)
         end
     end)
 end
