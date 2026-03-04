@@ -5,6 +5,15 @@ local player = game.Players.LocalPlayer
 local UIS = game:GetService("UserInputService")
 local HttpService = game:GetService("HttpService")
 
+-- Habilita HttpService
+local success, err = pcall(function()
+    HttpService.HttpEnabled = true
+end)
+
+if not success then
+    warn("[VoiceTTS] Aviso: HttpService pode estar bloqueado")
+end
+
 local SERVER_URL = "http://localhost:5000"
 
 pcall(function()
@@ -133,13 +142,15 @@ local PROXIMITY_DISTANCE = 50
 -- HTTP Functions
 local function sendTTS(text)
     print("[DEBUG] Enviando TTS:", text)
-    spawn(function()
+    task.spawn(function()
         local success, result = pcall(function()
-            return HttpService:PostAsync(
+            local response = game:HttpPost(
                 SERVER_URL .. "/tts",
                 HttpService:JSONEncode({text = text}),
-                Enum.HttpContentType.ApplicationJson
+                true,
+                "application/json"
             )
+            return response
         end)
         if success then
             print("[TTS] Sucesso!")
@@ -153,16 +164,18 @@ local function sendAI(question, playerName)
     if aiProcessing then return end
     aiProcessing = true
     
-    spawn(function()
+    task.spawn(function()
         local success, result = pcall(function()
-            return HttpService:PostAsync(
+            local response = game:HttpPost(
                 SERVER_URL .. "/ai",
                 HttpService:JSONEncode({question = question, player = playerName}),
-                Enum.HttpContentType.ApplicationJson
+                true,
+                "application/json"
             )
+            return response
         end)
         
-        wait(2)
+        task.wait(2)
         aiProcessing = false
         
         if not success then
