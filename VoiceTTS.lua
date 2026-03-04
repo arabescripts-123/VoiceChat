@@ -32,7 +32,7 @@ local MainFrame = Instance.new("Frame")
 MainFrame.Parent = ScreenGui
 MainFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 MainFrame.Position = UDim2.new(0.02, 0, 0.3, 0)
-MainFrame.Size = UDim2.new(0, 220, 0, 275)
+MainFrame.Size = UDim2.new(0, 220, 0, 320)
 
 local UICorner = Instance.new("UICorner")
 UICorner.CornerRadius = UDim.new(0, 8)
@@ -161,7 +161,41 @@ local ttsBtn, ttsIndicator = createButton("Voice TTS", 0, 50)
 local allChatBtn, allChatIndicator = createButton("All Chat TTS", 0, 95)
 local filaBtn, filaIndicator = createModeButton("Fila", 10, 140)
 local newBtn, newIndicator = createModeButton("New", 115, 140)
-local aiChatBtn, aiChatIndicator = createButton("AI Chat", 0, 185)
+local aiChatBtn, aiChatIndicator = createButton("AI Chat", 0, 230)
+
+-- Speed Slider
+local speedLabel = Instance.new("TextLabel")
+speedLabel.Parent = MainFrame
+speedLabel.BackgroundTransparency = 1
+speedLabel.Position = UDim2.new(0, 10, 0, 175)
+speedLabel.Size = UDim2.new(0, 200, 0, 15)
+speedLabel.Font = Enum.Font.Gotham
+speedLabel.Text = "Velocidade: 1.0x"
+speedLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+speedLabel.TextSize = 11
+speedLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+local speedTrack = Instance.new("Frame")
+speedTrack.Parent = MainFrame
+speedTrack.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+speedTrack.Position = UDim2.new(0, 10, 0, 195)
+speedTrack.Size = UDim2.new(0, 200, 0, 6)
+speedTrack.BorderSizePixel = 0
+
+local speedTrackCorner = Instance.new("UICorner")
+speedTrackCorner.CornerRadius = UDim.new(1, 0)
+speedTrackCorner.Parent = speedTrack
+
+local speedHandle = Instance.new("Frame")
+speedHandle.Parent = speedTrack
+speedHandle.BackgroundColor3 = Color3.fromRGB(100, 200, 255)
+speedHandle.Position = UDim2.new(0, 0, 0.5, -8)
+speedHandle.Size = UDim2.new(0, 16, 0, 16)
+speedHandle.BorderSizePixel = 0
+
+local speedHandleCorner = Instance.new("UICorner")
+speedHandleCorner.CornerRadius = UDim.new(1, 0)
+speedHandleCorner.Parent = speedHandle
 
 -- Variables
 local ttsEnabled = false
@@ -169,12 +203,53 @@ local allChatEnabled = false
 local aiChatEnabled = false
 local aiProcessing = false
 local PROXIMITY_DISTANCE = 50
+local ttsSpeed = 1.0
 
 -- Queue System
 local queueMode = true
 local messageQueue = {}
 local isProcessingQueue = false
 local currentTTSId = 0
+
+-- Speed Slider Logic
+local speedDragging = false
+
+speedHandle.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        speedDragging = true
+    end
+end)
+
+UIS.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        speedDragging = false
+    end
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if speedDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local mousePos = UIS:GetMouseLocation()
+        local trackPos = speedTrack.AbsolutePosition.X
+        local trackSize = speedTrack.AbsoluteSize.X
+        local relativePos = math.clamp(mousePos.X - trackPos, 0, trackSize)
+        local percentage = relativePos / trackSize
+        
+        ttsSpeed = 1.0 + (percentage * 1.5)
+        speedHandle.Position = UDim2.new(percentage, 0, 0.5, -8)
+        speedLabel.Text = string.format("Velocidade: %.1fx", ttsSpeed)
+        
+        task.spawn(function()
+            pcall(function()
+                request({
+                    Url = SERVER_URL .. "/speed",
+                    Method = "POST",
+                    Headers = {["Content-Type"] = "application/json"},
+                    Body = HttpService:JSONEncode({speed = ttsSpeed})
+                })
+            end)
+        end)
+    end
+end)
 
 -- HTTP Functions
 local function sendTTS(text, ttsId, priority)
@@ -187,7 +262,7 @@ local function sendTTS(text, ttsId, priority)
                 Headers = {
                     ["Content-Type"] = "application/json"
                 },
-                Body = HttpService:JSONEncode({text = text, priority = priority})
+                Body = HttpService:JSONEncode({text = text, priority = priority, speed = ttsSpeed})
             })
             return response
         end)
