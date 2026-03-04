@@ -210,6 +210,7 @@ local queueMode = true
 local messageQueue = {}
 local isProcessingQueue = false
 local currentTTSId = 0
+local isPlayingNew = false
 
 -- Speed Slider Logic
 local speedDragging = false
@@ -274,6 +275,31 @@ local function sendTTS(text, ttsId, priority)
     end)
 end
 
+local function processNewMode()
+    if isPlayingNew then return end
+    isPlayingNew = true
+    
+    task.spawn(function()
+        while #messageQueue > 0 and allChatEnabled and not queueMode and not aiProcessing do
+            local msg = messageQueue[#messageQueue]
+            messageQueue = {}
+            
+            sendTTS(msg.text, msg.id, "low")
+            
+            local textLength = #msg.text
+            local waitTime = math.max(5, textLength * 0.08)
+            print("[NEW] Aguardando", waitTime, "segundos")
+            task.wait(waitTime)
+            
+            while aiProcessing do
+                print("[NEW] Pausada - IA falando")
+                task.wait(1)
+            end
+        end
+        isPlayingNew = false
+    end)
+end
+
 local function processQueue()
     if isProcessingQueue then return end
     isProcessingQueue = true
@@ -305,13 +331,19 @@ local function handleTTS(text, priority)
         print("[VOICE TTS] Prioridade alta - limpando fila antiga")
         messageQueue = {}
         isProcessingQueue = false
+        isPlayingNew = false
         sendTTS(text, ttsId, "high")
         
         task.spawn(function()
             task.wait(5)
-            if queueMode and allChatEnabled then
-                print("[FILA] Iniciando nova fila do zero")
-                processQueue()
+            if allChatEnabled then
+                if queueMode then
+                    print("[FILA] Iniciando nova fila do zero")
+                    processQueue()
+                else
+                    print("[NEW] Reiniciando modo New")
+                    processNewMode()
+                end
             end
         end)
     elseif queueMode then
@@ -319,8 +351,9 @@ local function handleTTS(text, priority)
         print("[FILA] Adicionado:", text, "| Total:", #messageQueue)
         processQueue()
     else
-        print("[NEW] Enviando:", text)
-        sendTTS(text, ttsId, "low")
+        messageQueue = {{text = text, id = ttsId}}
+        print("[NEW] Substituindo por:", text)
+        processNewMode()
     end
 end
 
@@ -331,6 +364,7 @@ local function sendAI(question, playerName)
     print("[AI] Limpando fila antiga do All Chat TTS")
     messageQueue = {}
     isProcessingQueue = false
+    isPlayingNew = false
     
     task.spawn(function()
         local success, result = pcall(function()
@@ -353,8 +387,12 @@ local function sendAI(question, playerName)
             warn("[AI] Erro:", result)
         else
             print("[AI] Resposta enviada")
-            if queueMode and allChatEnabled then
-                processQueue()
+            if allChatEnabled then
+                if queueMode then
+                    processQueue()
+                else
+                    processNewMode()
+                end
             end
         end
     end)
@@ -395,6 +433,7 @@ newBtn.MouseButton1Click:Connect(function()
         queueMode = false
         messageQueue = {}
         isProcessingQueue = false
+        isPlayingNew = false
         filaIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
         newIndicator.BackgroundColor3 = Color3.fromRGB(50, 255, 50)
         print("[MODO] New ativado")
@@ -422,6 +461,7 @@ allChatBtn.MouseButton1Click:Connect(function()
     else
         messageQueue = {}
         isProcessingQueue = false
+        isPlayingNew = false
         filaIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
         newIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
         print("[All Chat] Desativado - Interrompendo e limpando fila")
