@@ -32,7 +32,7 @@ local MainFrame = Instance.new("Frame")
 MainFrame.Parent = ScreenGui
 MainFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 MainFrame.Position = UDim2.new(0.02, 0, 0.3, 0)
-MainFrame.Size = UDim2.new(0, 220, 0, 320)
+MainFrame.Size = UDim2.new(0, 220, 0, 380)
 
 local UICorner = Instance.new("UICorner")
 UICorner.CornerRadius = UDim.new(0, 8)
@@ -162,6 +162,37 @@ local allChatBtn, allChatIndicator = createButton("All Chat TTS", 0, 95)
 local filaBtn, filaIndicator = createModeButton("Fila", 10, 140)
 local newBtn, newIndicator = createModeButton("New", 115, 140)
 local aiChatBtn, aiChatIndicator = createButton("AI Chat", 0, 230)
+
+-- AI Input TextBox
+local aiInputBox = Instance.new("TextBox")
+aiInputBox.Parent = MainFrame
+aiInputBox.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+aiInputBox.Position = UDim2.new(0, 10, 0, 275)
+aiInputBox.Size = UDim2.new(0, 200, 0, 30)
+aiInputBox.Font = Enum.Font.Gotham
+aiInputBox.PlaceholderText = "Pergunte algo..."
+aiInputBox.Text = ""
+aiInputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+aiInputBox.TextSize = 12
+aiInputBox.ClearTextOnFocus = false
+
+local aiInputCorner = Instance.new("UICorner")
+aiInputCorner.CornerRadius = UDim.new(0, 6)
+aiInputCorner.Parent = aiInputBox
+
+local aiSendBtn = Instance.new("TextButton")
+aiSendBtn.Parent = MainFrame
+aiSendBtn.BackgroundColor3 = Color3.fromRGB(100, 200, 255)
+aiSendBtn.Position = UDim2.new(0, 10, 0, 315)
+aiSendBtn.Size = UDim2.new(0, 200, 0, 30)
+aiSendBtn.Font = Enum.Font.GothamBold
+aiSendBtn.Text = "Enviar para IA"
+aiSendBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+aiSendBtn.TextSize = 13
+
+local aiSendCorner = Instance.new("UICorner")
+aiSendCorner.CornerRadius = UDim.new(0, 6)
+aiSendCorner.Parent = aiSendBtn
 
 -- Speed Slider
 local speedLabel = Instance.new("TextLabel")
@@ -491,6 +522,18 @@ aiChatBtn.MouseButton1Click:Connect(function()
     end
     
     print("[AI]", aiChatEnabled and "Ativado" or "Desativado")
+end)
+
+aiSendBtn.MouseButton1Click:Connect(function()
+    local question = aiInputBox.Text
+    if question == "" or #question < 2 then
+        print("[AI] Pergunta muito curta")
+        return
+    end
+    
+    print("[AI] Enviando pergunta direta:", question)
+    aiInputBox.Text = ""
+    sendAI(question, player.DisplayName)
 end)
 
 rejoinBtn.MouseButton1Click:Connect(function()
