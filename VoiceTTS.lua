@@ -501,9 +501,9 @@ voiceSendBtn.MouseButton1Click:Connect(function()
                 Body = HttpService:JSONEncode({action = "stop"})
             })
         end)
+        task.wait(0.3)
+        handleTTS(text, "high")
     end)
-    
-    handleTTS(text, "high")
 end)
 
 filaBtn.MouseButton1Click:Connect(function()
