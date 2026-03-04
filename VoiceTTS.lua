@@ -177,8 +177,8 @@ local isProcessingQueue = false
 local currentTTSId = 0
 
 -- HTTP Functions
-local function sendTTS(text, ttsId)
-    print("[DEBUG] Enviando TTS:", text, "ID:", ttsId)
+local function sendTTS(text, ttsId, priority)
+    print("[DEBUG] Enviando TTS:", text, "ID:", ttsId, "Prioridade:", priority)
     task.spawn(function()
         local success, result = pcall(function()
             local response = request({
@@ -187,7 +187,7 @@ local function sendTTS(text, ttsId)
                 Headers = {
                     ["Content-Type"] = "application/json"
                 },
-                Body = HttpService:JSONEncode({text = text})
+                Body = HttpService:JSONEncode({text = text, priority = priority})
             })
             return response
         end)
@@ -204,34 +204,48 @@ local function processQueue()
     isProcessingQueue = true
     
     task.spawn(function()
-        while #messageQueue > 0 and allChatEnabled and queueMode do
+        while #messageQueue > 0 and allChatEnabled and queueMode and not aiProcessing do
             local msg = table.remove(messageQueue, 1)
-            sendTTS(msg.text, msg.id)
-            task.wait(3)
+            sendTTS(msg.text, msg.id, "low")
+            
+            local textLength = #msg.text
+            local waitTime = math.max(5, textLength * 0.08)
+            print("[FILA] Aguardando", waitTime, "segundos")
+            task.wait(waitTime)
+            
+            while aiProcessing do
+                print("[FILA] Pausada - IA falando")
+                task.wait(1)
+            end
         end
         isProcessingQueue = false
     end)
 end
 
-local function handleTTS(text)
+local function handleTTS(text, priority)
     currentTTSId = currentTTSId + 1
     local ttsId = currentTTSId
     
-    if queueMode then
+    if priority == "high" then
+        print("[VOICE TTS] Prioridade alta - interrompendo tudo")
+        messageQueue = {}
+        isProcessingQueue = false
+        sendTTS(text, ttsId, "high")
+    elseif queueMode then
         table.insert(messageQueue, {text = text, id = ttsId})
         print("[FILA] Adicionado:", text, "| Total:", #messageQueue)
         processQueue()
     else
-        messageQueue = {}
-        isProcessingQueue = false
         print("[NEW] Enviando:", text)
-        sendTTS(text, ttsId)
+        sendTTS(text, ttsId, "low")
     end
 end
 
 local function sendAI(question, playerName)
     if aiProcessing then return end
     aiProcessing = true
+    
+    print("[AI] Pausando All Chat TTS")
     
     task.spawn(function()
         local success, result = pcall(function()
@@ -248,11 +262,15 @@ local function sendAI(question, playerName)
         
         task.wait(2)
         aiProcessing = false
+        print("[AI] Retomando All Chat TTS")
         
         if not success then
             warn("[AI] Erro:", result)
         else
             print("[AI] Resposta enviada")
+            if queueMode then
+                processQueue()
+            end
         end
     end)
 end
@@ -271,6 +289,10 @@ end
 
 -- Button Events
 filaBtn.MouseButton1Click:Connect(function()
+    if not allChatEnabled then
+        print("[MODO] Ative All Chat TTS primeiro!")
+        return
+    end
     if not queueMode then
         queueMode = true
         filaIndicator.BackgroundColor3 = Color3.fromRGB(50, 255, 50)
@@ -280,6 +302,10 @@ filaBtn.MouseButton1Click:Connect(function()
 end)
 
 newBtn.MouseButton1Click:Connect(function()
+    if not allChatEnabled then
+        print("[MODO] Ative All Chat TTS primeiro!")
+        return
+    end
     if queueMode then
         queueMode = false
         messageQueue = {}
@@ -310,6 +336,8 @@ allChatBtn.MouseButton1Click:Connect(function()
     else
         messageQueue = {}
         isProcessingQueue = false
+        filaIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+        newIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
     end
     
     print("[All Chat]", allChatEnabled and "Ativado" or "Desativado")
@@ -331,14 +359,14 @@ player.Chatted:Connect(function(message)
     if message:sub(1, 5) == "/tts " then
         if ttsEnabled then
             local text = message:sub(6)
-            handleTTS(text)
+            handleTTS(text, "high")
         end
         return
     end
     
     if not ttsEnabled then return end
     if message:sub(1, 1) == "/" then return end
-    handleTTS(message)
+    handleTTS(message, "high")
 end)
 
 local function setupPlayerChat(plr)
@@ -359,7 +387,7 @@ local function setupPlayerChat(plr)
         if allChatEnabled and not aiProcessing then
             local textToSpeak = plr.DisplayName .. " falou " .. message
             print("[DEBUG] Falando:", textToSpeak)
-            handleTTS(textToSpeak)
+            handleTTS(textToSpeak, "low")
         end
     end)
 end
