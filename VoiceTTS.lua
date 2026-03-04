@@ -227,10 +227,18 @@ local function handleTTS(text, priority)
     local ttsId = currentTTSId
     
     if priority == "high" then
-        print("[VOICE TTS] Prioridade alta - interrompendo tudo")
+        print("[VOICE TTS] Prioridade alta - limpando fila antiga")
         messageQueue = {}
         isProcessingQueue = false
         sendTTS(text, ttsId, "high")
+        
+        task.spawn(function()
+            task.wait(5)
+            if queueMode and allChatEnabled then
+                print("[FILA] Iniciando nova fila do zero")
+                processQueue()
+            end
+        end)
     elseif queueMode then
         table.insert(messageQueue, {text = text, id = ttsId})
         print("[FILA] Adicionado:", text, "| Total:", #messageQueue)
@@ -245,7 +253,9 @@ local function sendAI(question, playerName)
     if aiProcessing then return end
     aiProcessing = true
     
-    print("[AI] Pausando All Chat TTS")
+    print("[AI] Limpando fila antiga do All Chat TTS")
+    messageQueue = {}
+    isProcessingQueue = false
     
     task.spawn(function()
         local success, result = pcall(function()
@@ -262,13 +272,13 @@ local function sendAI(question, playerName)
         
         task.wait(2)
         aiProcessing = false
-        print("[AI] Retomando All Chat TTS")
+        print("[AI] Iniciando nova fila do All Chat TTS")
         
         if not success then
             warn("[AI] Erro:", result)
         else
             print("[AI] Resposta enviada")
-            if queueMode then
+            if queueMode and allChatEnabled then
                 processQueue()
             end
         end
@@ -346,6 +356,12 @@ end)
 aiChatBtn.MouseButton1Click:Connect(function()
     aiChatEnabled = not aiChatEnabled
     aiChatIndicator.BackgroundColor3 = aiChatEnabled and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
+    
+    if aiChatEnabled then
+        print("[AI] Ativado - Anunciando")
+        handleTTS("Chat IA ativado, me faça perguntas", "high")
+    end
+    
     print("[AI]", aiChatEnabled and "Ativado" or "Desativado")
 end)
 
