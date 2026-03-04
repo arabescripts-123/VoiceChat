@@ -343,11 +343,13 @@ allChatBtn.MouseButton1Click:Connect(function()
         queueMode = true
         filaIndicator.BackgroundColor3 = Color3.fromRGB(50, 255, 50)
         newIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+        print("[All Chat] Ativado - Iniciando fila nova")
     else
         messageQueue = {}
         isProcessingQueue = false
         filaIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
         newIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+        print("[All Chat] Desativado - Fila limpa")
     end
     
     print("[All Chat]", allChatEnabled and "Ativado" or "Desativado")
