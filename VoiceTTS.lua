@@ -1,38 +1,28 @@
--- Voice TTS + AI Chat (HTTP Version)
-print("[VoiceTTS] Iniciando...")
+-- Arsenal Script
+print("[Arsenal] Iniciando...")
 
 local player = game.Players.LocalPlayer
 local UIS = game:GetService("UserInputService")
-local HttpService = game:GetService("HttpService")
-
--- Habilita HttpService
-local success, err = pcall(function()
-    HttpService.HttpEnabled = true
-end)
-
-if not success then
-    warn("[VoiceTTS] Aviso: HttpService pode estar bloqueado")
-end
-
-local SERVER_URL = "http://localhost:5000"
+local RunService = game:GetService("RunService")
+local TeleportService = game:GetService("TeleportService")
 
 pcall(function()
-    if game.CoreGui:FindFirstChild("VoiceTTSGui") then
-        game.CoreGui:FindFirstChild("VoiceTTSGui"):Destroy()
+    if game.CoreGui:FindFirstChild("ArsenalGui") then
+        game.CoreGui:FindFirstChild("ArsenalGui"):Destroy()
     end
 end)
 
--- GUI
+task.wait(1)
+
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "VoiceTTSGui"
+ScreenGui.Name = "ArsenalGui"
 ScreenGui.ResetOnSpawn = false
-ScreenGui.Parent = game.CoreGui
 
 local MainFrame = Instance.new("Frame")
 MainFrame.Parent = ScreenGui
 MainFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 MainFrame.Position = UDim2.new(0.02, 0, 0.3, 0)
-MainFrame.Size = UDim2.new(0, 220, 0, 380)
+MainFrame.Size = UDim2.new(0, 220, 0, 335)
 
 local UICorner = Instance.new("UICorner")
 UICorner.CornerRadius = UDim.new(0, 8)
@@ -48,7 +38,7 @@ Title.Parent = MainFrame
 Title.BackgroundTransparency = 1
 Title.Size = UDim2.new(1, -40, 0, 40)
 Title.Font = Enum.Font.GothamBold
-Title.Text = "Voice TTS + AI"
+Title.Text = "Arabe Scripts"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 18
 Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -58,8 +48,8 @@ Title.Active = true
 local rejoinBtn = Instance.new("TextButton")
 rejoinBtn.Parent = MainFrame
 rejoinBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-rejoinBtn.Position = UDim2.new(1, -40, 0, 5)
-rejoinBtn.Size = UDim2.new(0, 35, 0, 30)
+rejoinBtn.Position = UDim2.new(1, -35, 0, 5)
+rejoinBtn.Size = UDim2.new(0, 30, 0, 30)
 rejoinBtn.Font = Enum.Font.GothamBold
 rejoinBtn.Text = "R"
 rejoinBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -69,7 +59,6 @@ local rejoinCorner = Instance.new("UICorner")
 rejoinCorner.CornerRadius = UDim.new(0, 6)
 rejoinCorner.Parent = rejoinBtn
 
--- Dragging
 local dragging, dragInput, dragStart, startPos
 
 Title.InputBegan:Connect(function(input)
@@ -98,492 +87,555 @@ UIS.InputChanged:Connect(function(input)
     end
 end)
 
--- Buttons
-local function createButton(name, position, yPos)
-    local btn = Instance.new("TextButton")
-    btn.Parent = MainFrame
-    btn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
-    btn.Position = UDim2.new(0, 10, 0, yPos)
-    btn.Size = UDim2.new(0, 200, 0, 35)
-    btn.Font = Enum.Font.Gotham
-    btn.Text = name
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.TextSize = 13
+local function createButton(text, position)
+    local Button = Instance.new("TextButton")
+    local BtnCorner = Instance.new("UICorner")
+    local Indicator = Instance.new("Frame")
+    local IndicatorCorner = Instance.new("UICorner")
     
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 6)
-    corner.Parent = btn
+    Button.Parent = MainFrame
+    Button.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+    Button.Position = position
+    Button.Size = UDim2.new(0, 130, 0, 35)
+    Button.Font = Enum.Font.Gotham
+    Button.Text = text
+    Button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Button.TextSize = 13
     
-    local indicator = Instance.new("Frame")
-    indicator.Parent = btn
-    indicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-    indicator.Position = UDim2.new(1, -25, 0.5, -8)
-    indicator.Size = UDim2.new(0, 16, 0, 16)
-    indicator.BorderSizePixel = 0
+    BtnCorner.CornerRadius = UDim.new(0, 6)
+    BtnCorner.Parent = Button
     
-    local indicatorCorner = Instance.new("UICorner")
-    indicatorCorner.CornerRadius = UDim.new(1, 0)
-    indicatorCorner.Parent = indicator
+    Indicator.Parent = Button
+    Indicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+    Indicator.Position = UDim2.new(1, -25, 0.5, -8)
+    Indicator.Size = UDim2.new(0, 16, 0, 16)
+    Indicator.BorderSizePixel = 0
     
-    return btn, indicator
+    IndicatorCorner.CornerRadius = UDim.new(1, 0)
+    IndicatorCorner.Parent = Indicator
+    
+    return Button, Indicator
 end
 
-local function createModeButton(name, xPos, yPos)
-    local btn = Instance.new("TextButton")
-    btn.Parent = MainFrame
-    btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    btn.Position = UDim2.new(0, xPos, 0, yPos)
-    btn.Size = UDim2.new(0, 95, 0, 30)
-    btn.Font = Enum.Font.Gotham
-    btn.Text = name
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.TextSize = 12
+local function createKeyBox(text, position)
+    local Box = Instance.new("TextBox")
+    Box.Parent = MainFrame
+    Box.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    Box.Position = position
+    Box.Size = UDim2.new(0, 35, 0, 35)
+    Box.Font = Enum.Font.Gotham
+    Box.Text = text
+    Box.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Box.TextSize = 10
+    Box.ClearTextOnFocus = false
     
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 6)
-    corner.Parent = btn
-    
-    local indicator = Instance.new("Frame")
-    indicator.Parent = btn
-    indicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-    indicator.Position = UDim2.new(1, -20, 0.5, -6)
-    indicator.Size = UDim2.new(0, 12, 0, 12)
-    indicator.BorderSizePixel = 0
-    
-    local indicatorCorner = Instance.new("UICorner")
-    indicatorCorner.CornerRadius = UDim.new(1, 0)
-    indicatorCorner.Parent = indicator
-    
-    return btn, indicator
+    local Corner = Instance.new("UICorner")
+    Corner.CornerRadius = UDim.new(0, 6)
+    Corner.Parent = Box
+    return Box
 end
 
-local ttsBtn, ttsIndicator = createButton("Voice TTS", 0, 50)
-local allChatBtn, allChatIndicator = createButton("All Chat TTS", 0, 95)
-local filaBtn, filaIndicator = createModeButton("Fila", 10, 140)
-local newBtn, newIndicator = createModeButton("New", 115, 140)
-local aiChatBtn, aiChatIndicator = createButton("AI Chat", 0, 230)
+local espKey = Enum.KeyCode.J
+local aimbotKey = Enum.KeyCode.X
+local autoFireKey = Enum.KeyCode.C
+local maxKey = Enum.KeyCode.V
+local superJumpKey = Enum.KeyCode.B
+local toggleKey = Enum.KeyCode.Z
 
--- AI Input TextBox
-local aiInputBox = Instance.new("TextBox")
-aiInputBox.Parent = MainFrame
-aiInputBox.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-aiInputBox.Position = UDim2.new(0, 10, 0, 275)
-aiInputBox.Size = UDim2.new(0, 200, 0, 30)
-aiInputBox.Font = Enum.Font.Gotham
-aiInputBox.PlaceholderText = "Pergunte algo..."
-aiInputBox.Text = ""
-aiInputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-aiInputBox.TextSize = 12
-aiInputBox.ClearTextOnFocus = false
+local aimbotEnabled = false
+local aimbotFOV = 300
+local rightMouseDown = false
+local autoFireEnabled = false
+local maxEnabled = false
+local superJumpEnabled = false
 
-local aiInputCorner = Instance.new("UICorner")
-aiInputCorner.CornerRadius = UDim.new(0, 6)
-aiInputCorner.Parent = aiInputBox
+local espEnabled = false
+local espBoxes = {}
+local espConnections = {}
 
-local aiSendBtn = Instance.new("TextButton")
-aiSendBtn.Parent = MainFrame
-aiSendBtn.BackgroundColor3 = Color3.fromRGB(100, 200, 255)
-aiSendBtn.Position = UDim2.new(0, 10, 0, 315)
-aiSendBtn.Size = UDim2.new(0, 200, 0, 30)
-aiSendBtn.Font = Enum.Font.GothamBold
-aiSendBtn.Text = "Enviar para IA"
-aiSendBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-aiSendBtn.TextSize = 13
+local function isEnemy(otherPlayer)
+    if not otherPlayer or not otherPlayer.Team or not player.Team then return false end
+    return otherPlayer.Team ~= player.Team
+end
 
-local aiSendCorner = Instance.new("UICorner")
-aiSendCorner.CornerRadius = UDim.new(0, 6)
-aiSendCorner.Parent = aiSendBtn
+local function addESP(plr)
+    if plr == player or not espEnabled then return end
+    
+    local function createHighlight(char)
+        task.wait(0.1)
+        if not espEnabled then return end
+        
+        pcall(function()
+            if not isEnemy(plr) then return end
+            
+            local head = char:FindFirstChild("Head")
+            if not head then return end
+            
+            local color = Color3.fromRGB(255, 0, 0)
+            
+            local highlight = Instance.new("Highlight")
+            highlight.FillColor = color
+            highlight.OutlineColor = color
+            highlight.FillTransparency = 0.7
+            highlight.OutlineTransparency = 0.2
+            highlight.Adornee = char
+            highlight.Parent = char
+            
+            local billboard = Instance.new("BillboardGui")
+            billboard.Adornee = head
+            billboard.Size = UDim2.new(0, 100, 0, 50)
+            billboard.StudsOffset = Vector3.new(0, 3, 0)
+            billboard.AlwaysOnTop = true
+            billboard.Parent = head
+            
+            local nameLabel = Instance.new("TextLabel")
+            nameLabel.Size = UDim2.new(1, 0, 1, 0)
+            nameLabel.BackgroundTransparency = 1
+            nameLabel.Text = plr.Name
+            nameLabel.TextColor3 = color
+            nameLabel.TextStrokeTransparency = 0.5
+            nameLabel.Font = Enum.Font.GothamBold
+            nameLabel.TextSize = 14
+            nameLabel.Parent = billboard
+            
+            if not espBoxes[plr] then espBoxes[plr] = {} end
+            table.insert(espBoxes[plr], highlight)
+            table.insert(espBoxes[plr], billboard)
+        end)
+    end
+    
+    if plr.Character then createHighlight(plr.Character) end
+    espConnections[plr] = plr.CharacterAdded:Connect(function(char)
+        if espEnabled then createHighlight(char) end
+    end)
+end
 
--- Speed Slider
-local speedLabel = Instance.new("TextLabel")
-speedLabel.Parent = MainFrame
-speedLabel.BackgroundTransparency = 1
-speedLabel.Position = UDim2.new(0, 10, 0, 175)
-speedLabel.Size = UDim2.new(0, 200, 0, 15)
-speedLabel.Font = Enum.Font.Gotham
-speedLabel.Text = "Velocidade: 1.0x"
-speedLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-speedLabel.TextSize = 11
-speedLabel.TextXAlignment = Enum.TextXAlignment.Left
+local function removeESP(plr)
+    if espBoxes[plr] then
+        for _, v in pairs(espBoxes[plr]) do
+            pcall(function() v:Destroy() end)
+        end
+        espBoxes[plr] = nil
+    end
+    if espConnections[plr] then
+        espConnections[plr]:Disconnect()
+        espConnections[plr] = nil
+    end
+end
 
-local speedTrack = Instance.new("Frame")
-speedTrack.Parent = MainFrame
-speedTrack.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-speedTrack.Position = UDim2.new(0, 10, 0, 195)
-speedTrack.Size = UDim2.new(0, 200, 0, 6)
-speedTrack.BorderSizePixel = 0
+local function refreshESP()
+    for plr, _ in pairs(espBoxes) do
+        if not isEnemy(plr) then
+            removeESP(plr)
+        end
+    end
+    for _, plr in pairs(game.Players:GetPlayers()) do
+        if plr ~= player and isEnemy(plr) then
+            if not espBoxes[plr] and plr.Character then
+                removeESP(plr)
+                addESP(plr)
+            end
+        end
+    end
+end
 
-local speedTrackCorner = Instance.new("UICorner")
-speedTrackCorner.CornerRadius = UDim.new(1, 0)
-speedTrackCorner.Parent = speedTrack
+local function enableESP()
+    for _, plr in pairs(game.Players:GetPlayers()) do addESP(plr) end
+    espConnections.playerAdded = game.Players.PlayerAdded:Connect(function(plr)
+        if espEnabled then addESP(plr) end
+    end)
+    espConnections.playerRemoving = game.Players.PlayerRemoving:Connect(function(plr)
+        removeESP(plr)
+    end)
+    espConnections.refresh = RunService.Heartbeat:Connect(function()
+        if espEnabled and tick() % 2 < 0.016 then
+            refreshESP()
+        end
+    end)
+end
 
-local speedHandle = Instance.new("Frame")
-speedHandle.Parent = speedTrack
-speedHandle.BackgroundColor3 = Color3.fromRGB(100, 200, 255)
-speedHandle.Position = UDim2.new(0, 0, 0.5, -8)
-speedHandle.Size = UDim2.new(0, 16, 0, 16)
-speedHandle.BorderSizePixel = 0
+local function disableESP()
+    for plr, _ in pairs(espBoxes) do removeESP(plr) end
+    if espConnections.playerAdded then
+        espConnections.playerAdded:Disconnect()
+        espConnections.playerAdded = nil
+    end
+    if espConnections.playerRemoving then
+        espConnections.playerRemoving:Disconnect()
+        espConnections.playerRemoving = nil
+    end
+    if espConnections.refresh then
+        espConnections.refresh:Disconnect()
+        espConnections.refresh = nil
+    end
+end
 
-local speedHandleCorner = Instance.new("UICorner")
-speedHandleCorner.CornerRadius = UDim.new(1, 0)
-speedHandleCorner.Parent = speedHandle
+local espBtn, espIndicator = createButton("ESP", UDim2.new(0, 10, 0, 50))
+local espKeyBox = createKeyBox("J", UDim2.new(0, 145, 0, 50))
 
--- Variables
-local ttsEnabled = false
-local allChatEnabled = false
-local aiChatEnabled = false
-local aiProcessing = false
-local PROXIMITY_DISTANCE = 50
-local ttsSpeed = 1.0
+local aimbotBtn, aimbotIndicator = createButton("Aimbot", UDim2.new(0, 10, 0, 95))
+local aimbotKeyBox = createKeyBox("X", UDim2.new(0, 145, 0, 95))
 
--- Queue System
-local queueMode = true
-local messageQueue = {}
-local isProcessingQueue = false
-local currentTTSId = 0
-local isPlayingNew = false
+local autoFireBtn, autoFireIndicator = createButton("Auto Fire", UDim2.new(0, 10, 0, 140))
+local autoFireKeyBox = createKeyBox("C", UDim2.new(0, 145, 0, 140))
 
--- Speed Slider Logic
-local speedDragging = false
+local maxBtn, maxIndicator = createButton("Max", UDim2.new(0, 10, 0, 185))
+local maxKeyBox = createKeyBox("V", UDim2.new(0, 145, 0, 185))
 
-speedHandle.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        speedDragging = true
+local superJumpBtn, superJumpIndicator = createButton("Super Jump", UDim2.new(0, 10, 0, 230))
+local superJumpKeyBox = createKeyBox("B", UDim2.new(0, 145, 0, 230))
+
+espBtn.MouseButton1Click:Connect(function()
+    espEnabled = not espEnabled
+    if espEnabled then
+        enableESP()
+        espIndicator.BackgroundColor3 = Color3.fromRGB(50, 255, 50)
+    else
+        disableESP()
+        espIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+    end
+end)
+
+local function getClosestEnemy()
+    local mouse = player:GetMouse()
+    local mousePos = Vector2.new(mouse.X, mouse.Y)
+    local closest = nil
+    local shortestDistance = aimbotFOV
+    
+    for _, plr in pairs(game.Players:GetPlayers()) do
+        if plr ~= player and plr.Character and isEnemy(plr) then
+            local humanoid = plr.Character:FindFirstChild("Humanoid")
+            local head = plr.Character:FindFirstChild("Head")
+            
+            if humanoid and head and humanoid.Health > 0 then
+                local screenPos, onScreen = workspace.CurrentCamera:WorldToViewportPoint(head.Position)
+                if onScreen then
+                    local distance = (Vector2.new(screenPos.X, screenPos.Y) - mousePos).Magnitude
+                    if distance < shortestDistance then
+                        local ray = Ray.new(workspace.CurrentCamera.CFrame.Position, (head.Position - workspace.CurrentCamera.CFrame.Position).Unit * 1000)
+                        local hit = workspace:FindPartOnRayWithIgnoreList(ray, {player.Character})
+                        if hit and hit:IsDescendantOf(plr.Character) then
+                            shortestDistance = distance
+                            closest = head
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return closest
+end
+
+local function getClosestEnemyMax()
+    local cam = workspace.CurrentCamera
+    local closest = nil
+    local shortestDistance = math.huge
+    
+    for _, plr in pairs(game.Players:GetPlayers()) do
+        if plr ~= player and plr.Character and isEnemy(plr) then
+            local humanoid = plr.Character:FindFirstChild("Humanoid")
+            local head = plr.Character:FindFirstChild("Head")
+            
+            if humanoid and head and humanoid.Health > 0 then
+                local screenPos, onScreen = workspace.CurrentCamera:WorldToViewportPoint(head.Position)
+                if onScreen then
+                    local ray = Ray.new(cam.CFrame.Position, (head.Position - cam.CFrame.Position).Unit * 1000)
+                    local hit = workspace:FindPartOnRayWithIgnoreList(ray, {player.Character})
+                    if hit and hit:IsDescendantOf(plr.Character) then
+                        local distance = (cam.CFrame.Position - head.Position).Magnitude
+                        if distance < shortestDistance then
+                            shortestDistance = distance
+                            closest = head
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return closest
+end
+
+local hitboxExpansion = 3
+
+player.CharacterAdded:Connect(function()
+    task.wait(1)
+    for _, plr in pairs(game.Players:GetPlayers()) do
+        if plr ~= player and plr.Character then
+            for _, part in pairs(plr.Character:GetChildren()) do
+                if part:IsA("BasePart") then
+                    part.Size = part.Size + Vector3.new(hitboxExpansion, hitboxExpansion, hitboxExpansion)
+                    part.Transparency = 1
+                    part.CanCollide = false
+                end
+            end
+        end
+    end
+end)
+
+game.Players.PlayerAdded:Connect(function(plr)
+    plr.CharacterAdded:Connect(function(char)
+        task.wait(0.5)
+        if plr ~= player then
+            for _, part in pairs(char:GetChildren()) do
+                if part:IsA("BasePart") then
+                    part.Size = part.Size + Vector3.new(hitboxExpansion, hitboxExpansion, hitboxExpansion)
+                    part.Transparency = 1
+                    part.CanCollide = false
+                end
+            end
+        end
+    end)
+end)
+
+for _, plr in pairs(game.Players:GetPlayers()) do
+    if plr ~= player and plr.Character then
+        for _, part in pairs(plr.Character:GetChildren()) do
+            if part:IsA("BasePart") then
+                part.Size = part.Size + Vector3.new(hitboxExpansion, hitboxExpansion, hitboxExpansion)
+                part.Transparency = 1
+                part.CanCollide = false
+            end
+        end
+    end
+end
+
+local function isEnemyInCrosshair()
+    local cam = workspace.CurrentCamera
+    local screenCenter = Vector2.new(cam.ViewportSize.X / 2, cam.ViewportSize.Y / 2)
+    local ray = cam:ViewportPointToRay(screenCenter.X, screenCenter.Y)
+    
+    local raycastParams = RaycastParams.new()
+    raycastParams.FilterDescendantsInstances = {player.Character}
+    raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+    
+    local result = workspace:Raycast(ray.Origin, ray.Direction * 1000, raycastParams)
+    
+    if result and result.Instance then
+        local hitPlayer = game.Players:GetPlayerFromCharacter(result.Instance.Parent)
+        if hitPlayer and isEnemy(hitPlayer) then
+            local humanoid = hitPlayer.Character:FindFirstChild("Humanoid")
+            if humanoid and humanoid.Health > 0 then
+                return true
+            end
+        end
+    end
+    return false
+end
+
+RunService.RenderStepped:Connect(function()
+    if maxEnabled then
+        local target = getClosestEnemyMax()
+        if target then
+            local cam = workspace.CurrentCamera
+            local targetPos = target.Position
+            cam.CFrame = CFrame.new(cam.CFrame.Position, targetPos)
+        end
+    elseif aimbotEnabled and rightMouseDown then
+        local target = getClosestEnemy()
+        if target then
+            local cam = workspace.CurrentCamera
+            local targetPos = target.Position
+            cam.CFrame = CFrame.new(cam.CFrame.Position, targetPos)
+        end
+    end
+end)
+
+RunService.Heartbeat:Connect(function()
+    if maxEnabled then
+        if isEnemyInCrosshair() then
+            mouse1press()
+            task.wait(0.05)
+            mouse1release()
+        end
+    elseif autoFireEnabled then
+        if isEnemyInCrosshair() then
+            mouse1press()
+            task.wait(0.05)
+            mouse1release()
+        end
+    end
+end)
+
+aimbotBtn.MouseButton1Click:Connect(function()
+    if maxEnabled then return end
+    aimbotEnabled = not aimbotEnabled
+    if aimbotEnabled then
+        aimbotIndicator.BackgroundColor3 = Color3.fromRGB(50, 255, 50)
+    else
+        aimbotIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+    end
+end)
+
+autoFireBtn.MouseButton1Click:Connect(function()
+    if maxEnabled then return end
+    autoFireEnabled = not autoFireEnabled
+    if autoFireEnabled then
+        autoFireIndicator.BackgroundColor3 = Color3.fromRGB(50, 255, 50)
+    else
+        autoFireIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+    end
+end)
+
+maxBtn.MouseButton1Click:Connect(function()
+    maxEnabled = not maxEnabled
+    if maxEnabled then
+        aimbotEnabled = false
+        autoFireEnabled = false
+        aimbotIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+        autoFireIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+        maxIndicator.BackgroundColor3 = Color3.fromRGB(50, 255, 50)
+    else
+        maxIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+    end
+end)
+
+superJumpBtn.MouseButton1Click:Connect(function()
+    superJumpEnabled = not superJumpEnabled
+    if superJumpEnabled then
+        superJumpIndicator.BackgroundColor3 = Color3.fromRGB(50, 255, 50)
+    else
+        superJumpIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+    end
+end)
+
+RunService.Heartbeat:Connect(function()
+    if superJumpEnabled and player.Character and player.Character:FindFirstChild("Humanoid") then
+        player.Character.Humanoid.JumpHeight = 100
+        player.Character.Humanoid.UseJumpPower = false
+    elseif player.Character and player.Character:FindFirstChild("Humanoid") then
+        player.Character.Humanoid.JumpHeight = 7.2
+        player.Character.Humanoid.UseJumpPower = false
+    end
+end)
+
+rejoinBtn.MouseButton1Click:Connect(function()
+    local ts = game:GetService("TeleportService")
+    local p = game:GetService("Players").LocalPlayer
+    ts:Teleport(game.PlaceId, p)
+end)
+
+espKeyBox.FocusLost:Connect(function()
+    local text = espKeyBox.Text:upper()
+    local success, key = pcall(function() return Enum.KeyCode[text] end)
+    if success and key then
+        espKey = key
+        espKeyBox.Text = text
+    else
+        espKeyBox.Text = "J"
+        espKey = Enum.KeyCode.J
+    end
+end)
+
+aimbotKeyBox.FocusLost:Connect(function()
+    local text = aimbotKeyBox.Text:upper()
+    local success, key = pcall(function() return Enum.KeyCode[text] end)
+    if success and key then
+        aimbotKey = key
+        aimbotKeyBox.Text = text
+    else
+        aimbotKeyBox.Text = "X"
+        aimbotKey = Enum.KeyCode.X
+    end
+end)
+
+autoFireKeyBox.FocusLost:Connect(function()
+    local text = autoFireKeyBox.Text:upper()
+    local success, key = pcall(function() return Enum.KeyCode[text] end)
+    if success and key then
+        autoFireKey = key
+        autoFireKeyBox.Text = text
+    else
+        autoFireKeyBox.Text = "C"
+        autoFireKey = Enum.KeyCode.C
+    end
+end)
+
+maxKeyBox.FocusLost:Connect(function()
+    local text = maxKeyBox.Text:upper()
+    local success, key = pcall(function() return Enum.KeyCode[text] end)
+    if success and key then
+        maxKey = key
+        maxKeyBox.Text = text
+    else
+        maxKeyBox.Text = "V"
+        maxKey = Enum.KeyCode.V
+    end
+end)
+
+superJumpKeyBox.FocusLost:Connect(function()
+    local text = superJumpKeyBox.Text:upper()
+    local success, key = pcall(function() return Enum.KeyCode[text] end)
+    if success and key then
+        superJumpKey = key
+        superJumpKeyBox.Text = text
+    else
+        superJumpKeyBox.Text = "B"
+        superJumpKey = Enum.KeyCode.B
+    end
+end)
+
+UIS.InputBegan:Connect(function(input, gameProcessed)
+    if input.UserInputType == Enum.UserInputType.MouseButton2 then
+        rightMouseDown = true
+        return
+    end
+    
+    if gameProcessed then return end
+    
+    if input.KeyCode == toggleKey then
+        MainFrame.Visible = not MainFrame.Visible
+    elseif input.KeyCode == espKey then
+        espEnabled = not espEnabled
+        if espEnabled then
+            enableESP()
+            espIndicator.BackgroundColor3 = Color3.fromRGB(50, 255, 50)
+        else
+            disableESP()
+            espIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+        end
+    elseif input.KeyCode == aimbotKey then
+        if maxEnabled then return end
+        aimbotEnabled = not aimbotEnabled
+        if aimbotEnabled then
+            aimbotIndicator.BackgroundColor3 = Color3.fromRGB(50, 255, 50)
+        else
+            aimbotIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+        end
+    elseif input.KeyCode == autoFireKey then
+        if maxEnabled then return end
+        autoFireEnabled = not autoFireEnabled
+        if autoFireEnabled then
+            autoFireIndicator.BackgroundColor3 = Color3.fromRGB(50, 255, 50)
+        else
+            autoFireIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+        end
+    elseif input.KeyCode == maxKey then
+        maxEnabled = not maxEnabled
+        if maxEnabled then
+            aimbotEnabled = false
+            autoFireEnabled = false
+            aimbotIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+            autoFireIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+            maxIndicator.BackgroundColor3 = Color3.fromRGB(50, 255, 50)
+        else
+            maxIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+        end
+    elseif input.KeyCode == superJumpKey then
+        superJumpEnabled = not superJumpEnabled
+        if superJumpEnabled then
+            superJumpIndicator.BackgroundColor3 = Color3.fromRGB(50, 255, 50)
+        else
+            superJumpIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+        end
     end
 end)
 
 UIS.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        speedDragging = false
+    if input.UserInputType == Enum.UserInputType.MouseButton2 then
+        rightMouseDown = false
     end
 end)
 
-UIS.InputChanged:Connect(function(input)
-    if speedDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-        local mousePos = UIS:GetMouseLocation()
-        local trackPos = speedTrack.AbsolutePosition.X
-        local trackSize = speedTrack.AbsoluteSize.X
-        local relativePos = math.clamp(mousePos.X - trackPos, 0, trackSize)
-        local percentage = relativePos / trackSize
-        
-        ttsSpeed = 1.0 + (percentage * 1.5)
-        speedHandle.Position = UDim2.new(percentage, 0, 0.5, -8)
-        speedLabel.Text = string.format("Velocidade: %.1fx", ttsSpeed)
-        
-        task.spawn(function()
-            pcall(function()
-                request({
-                    Url = SERVER_URL .. "/speed",
-                    Method = "POST",
-                    Headers = {["Content-Type"] = "application/json"},
-                    Body = HttpService:JSONEncode({speed = ttsSpeed})
-                })
-            end)
-        end)
-    end
-end)
+ScreenGui.Parent = game.CoreGui
 
--- HTTP Functions
-local function sendTTS(text, ttsId, priority)
-    print("[DEBUG] Enviando TTS:", text, "ID:", ttsId, "Prioridade:", priority)
-    task.spawn(function()
-        local success, result = pcall(function()
-            local response = request({
-                Url = SERVER_URL .. "/tts",
-                Method = "POST",
-                Headers = {
-                    ["Content-Type"] = "application/json"
-                },
-                Body = HttpService:JSONEncode({text = text, priority = priority, speed = ttsSpeed})
-            })
-            return response
-        end)
-        if success then
-            print("[TTS] Sucesso! ID:", ttsId)
-        else
-            warn("[TTS] Erro:", result)
-        end
-    end)
-end
-
-local function processNewMode()
-    if isPlayingNew then return end
-    isPlayingNew = true
-    
-    task.spawn(function()
-        while #messageQueue > 0 and allChatEnabled and not queueMode and not aiProcessing do
-            local msg = messageQueue[#messageQueue]
-            messageQueue = {}
-            
-            sendTTS(msg.text, msg.id, "low")
-            
-            local textLength = #msg.text
-            local waitTime = math.max(5, textLength * 0.08)
-            print("[NEW] Aguardando", waitTime, "segundos")
-            task.wait(waitTime)
-            
-            while aiProcessing do
-                print("[NEW] Pausada - IA falando")
-                task.wait(1)
-            end
-        end
-        isPlayingNew = false
-    end)
-end
-
-local function processQueue()
-    if isProcessingQueue then return end
-    isProcessingQueue = true
-    
-    task.spawn(function()
-        while #messageQueue > 0 and allChatEnabled and queueMode and not aiProcessing do
-            local msg = table.remove(messageQueue, 1)
-            sendTTS(msg.text, msg.id, "low")
-            
-            local textLength = #msg.text
-            local waitTime = math.max(5, textLength * 0.08)
-            print("[FILA] Aguardando", waitTime, "segundos")
-            task.wait(waitTime)
-            
-            while aiProcessing do
-                print("[FILA] Pausada - IA falando")
-                task.wait(1)
-            end
-        end
-        isProcessingQueue = false
-    end)
-end
-
-local function handleTTS(text, priority)
-    currentTTSId = currentTTSId + 1
-    local ttsId = currentTTSId
-    
-    if priority == "high" then
-        print("[VOICE TTS] Prioridade alta - limpando fila antiga")
-        messageQueue = {}
-        isProcessingQueue = false
-        isPlayingNew = false
-        sendTTS(text, ttsId, "high")
-        
-        task.spawn(function()
-            task.wait(5)
-            if allChatEnabled then
-                if queueMode then
-                    print("[FILA] Iniciando nova fila do zero")
-                    processQueue()
-                else
-                    print("[NEW] Reiniciando modo New")
-                    processNewMode()
-                end
-            end
-        end)
-    elseif queueMode then
-        table.insert(messageQueue, {text = text, id = ttsId})
-        print("[FILA] Adicionado:", text, "| Total:", #messageQueue)
-        processQueue()
-    else
-        messageQueue = {{text = text, id = ttsId}}
-        print("[NEW] Substituindo por:", text)
-        processNewMode()
-    end
-end
-
-local function sendAI(question, playerName)
-    if aiProcessing then return end
-    aiProcessing = true
-    
-    print("[AI] Limpando fila antiga do All Chat TTS")
-    messageQueue = {}
-    isProcessingQueue = false
-    isPlayingNew = false
-    
-    task.spawn(function()
-        local success, result = pcall(function()
-            local response = request({
-                Url = SERVER_URL .. "/ai",
-                Method = "POST",
-                Headers = {
-                    ["Content-Type"] = "application/json"
-                },
-                Body = HttpService:JSONEncode({question = question, player = playerName})
-            })
-            return response
-        end)
-        
-        task.wait(2)
-        aiProcessing = false
-        print("[AI] Iniciando nova fila do All Chat TTS")
-        
-        if not success then
-            warn("[AI] Erro:", result)
-        else
-            print("[AI] Resposta enviada")
-            if allChatEnabled then
-                if queueMode then
-                    processQueue()
-                else
-                    processNewMode()
-                end
-            end
-        end
-    end)
-end
-
-local function isPlayerNearby(plr)
-    if not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") then
-        return false
-    end
-    if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then
-        return false
-    end
-    
-    local distance = (plr.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
-    return distance <= PROXIMITY_DISTANCE
-end
-
--- Button Events
-filaBtn.MouseButton1Click:Connect(function()
-    if not allChatEnabled then
-        print("[MODO] Ative All Chat TTS primeiro!")
-        return
-    end
-    if not queueMode then
-        queueMode = true
-        filaIndicator.BackgroundColor3 = Color3.fromRGB(50, 255, 50)
-        newIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-        print("[MODO] Fila ativado")
-    end
-end)
-
-newBtn.MouseButton1Click:Connect(function()
-    if not allChatEnabled then
-        print("[MODO] Ative All Chat TTS primeiro!")
-        return
-    end
-    if queueMode then
-        queueMode = false
-        messageQueue = {}
-        isProcessingQueue = false
-        isPlayingNew = false
-        filaIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-        newIndicator.BackgroundColor3 = Color3.fromRGB(50, 255, 50)
-        print("[MODO] New ativado")
-    end
-end)
-
-ttsBtn.MouseButton1Click:Connect(function()
-    ttsEnabled = not ttsEnabled
-    ttsIndicator.BackgroundColor3 = ttsEnabled and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
-    if ttsEnabled then
-        handleTTS("Oi Xexelento")
-    end
-    print("[TTS]", ttsEnabled and "Ativado" or "Desativado")
-end)
-
-allChatBtn.MouseButton1Click:Connect(function()
-    allChatEnabled = not allChatEnabled
-    allChatIndicator.BackgroundColor3 = allChatEnabled and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
-    
-    if allChatEnabled then
-        queueMode = true
-        filaIndicator.BackgroundColor3 = Color3.fromRGB(50, 255, 50)
-        newIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-        print("[All Chat] Ativado - Iniciando fila nova")
-    else
-        messageQueue = {}
-        isProcessingQueue = false
-        isPlayingNew = false
-        filaIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-        newIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-        print("[All Chat] Desativado - Interrompendo e limpando fila")
-        
-        task.spawn(function()
-            pcall(function()
-                request({
-                    Url = SERVER_URL .. "/stop",
-                    Method = "POST",
-                    Headers = {["Content-Type"] = "application/json"},
-                    Body = HttpService:JSONEncode({action = "stop"})
-                })
-            end)
-        end)
-    end
-    
-    print("[All Chat]", allChatEnabled and "Ativado" or "Desativado")
-end)
-
-aiChatBtn.MouseButton1Click:Connect(function()
-    aiChatEnabled = not aiChatEnabled
-    aiChatIndicator.BackgroundColor3 = aiChatEnabled and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
-    print("[AI]", aiChatEnabled and "Ativado" or "Desativado")
-end)
-
-aiSendBtn.MouseButton1Click:Connect(function()
-    local question = aiInputBox.Text
-    if question == "" or #question < 2 then
-        print("[AI] Pergunta muito curta")
-        return
-    end
-    
-    print("[AI] Enviando pergunta direta:", question)
-    aiInputBox.Text = ""
-    sendAI(question, player.DisplayName)
-end)
-
-rejoinBtn.MouseButton1Click:Connect(function()
-    local TeleportService = game:GetService("TeleportService")
-    TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, player)
-end)
-
--- Chat Events
-player.Chatted:Connect(function(message)
-    if message:sub(1, 5) == "/tts " then
-        if ttsEnabled then
-            local text = message:sub(6)
-            handleTTS(text, "high")
-        end
-        return
-    end
-    
-    if not ttsEnabled then return end
-    if message:sub(1, 1) == "/" then return end
-    handleTTS(message, "high")
-end)
-
-local function setupPlayerChat(plr)
-    if plr == player then return end
-    
-    plr.Chatted:Connect(function(message)
-        print("[DEBUG] Player", plr.DisplayName, "falou:", message)
-        
-        local isNearby = isPlayerNearby(plr)
-        local isQuestion = message:sub(-1) == "?"
-        
-        if aiChatEnabled and isNearby and isQuestion then
-            print("[DEBUG] Enviando para IA")
-            sendAI(message, plr.DisplayName)
-            return
-        end
-        
-        if allChatEnabled and not aiProcessing then
-            local textToSpeak = plr.DisplayName .. " falou " .. message
-            print("[DEBUG] Falando:", textToSpeak)
-            handleTTS(textToSpeak, "low")
-        end
-    end)
-end
-
-for _, plr in pairs(game.Players:GetPlayers()) do
-    setupPlayerChat(plr)
-end
-
-game.Players.PlayerAdded:Connect(setupPlayerChat)
-
-UIS.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-    if input.KeyCode == Enum.KeyCode.Z then
-        MainFrame.Visible = not MainFrame.Visible
-    end
-end)
-
-print("[VoiceTTS + AI] Carregado! Z=Menu | Server:", SERVER_URL)
+print("[Arsenal] Carregado! Z=Menu J=ESP X=Aimbot C=AutoFire V=Max B=SuperJump | Aimbot: Segure BOTAO DIREITO")
