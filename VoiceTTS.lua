@@ -144,12 +144,14 @@ local function sendTTS(text)
     print("[DEBUG] Enviando TTS:", text)
     task.spawn(function()
         local success, result = pcall(function()
-            local response = game:HttpPost(
-                SERVER_URL .. "/tts",
-                HttpService:JSONEncode({text = text}),
-                true,
-                "application/json"
-            )
+            local response = request({
+                Url = SERVER_URL .. "/tts",
+                Method = "POST",
+                Headers = {
+                    ["Content-Type"] = "application/json"
+                },
+                Body = HttpService:JSONEncode({text = text})
+            })
             return response
         end)
         if success then
@@ -166,12 +168,14 @@ local function sendAI(question, playerName)
     
     task.spawn(function()
         local success, result = pcall(function()
-            local response = game:HttpPost(
-                SERVER_URL .. "/ai",
-                HttpService:JSONEncode({question = question, player = playerName}),
-                true,
-                "application/json"
-            )
+            local response = request({
+                Url = SERVER_URL .. "/ai",
+                Method = "POST",
+                Headers = {
+                    ["Content-Type"] = "application/json"
+                },
+                Body = HttpService:JSONEncode({question = question, player = playerName})
+            })
             return response
         end)
         
