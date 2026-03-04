@@ -515,12 +515,6 @@ end)
 aiChatBtn.MouseButton1Click:Connect(function()
     aiChatEnabled = not aiChatEnabled
     aiChatIndicator.BackgroundColor3 = aiChatEnabled and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
-    
-    if aiChatEnabled then
-        print("[AI] Ativado - Anunciando")
-        handleTTS("Chat IA ativado, me faça perguntas", "high")
-    end
-    
     print("[AI]", aiChatEnabled and "Ativado" or "Desativado")
 end)
 
