@@ -132,6 +132,7 @@ local PROXIMITY_DISTANCE = 50
 
 -- HTTP Functions
 local function sendTTS(text)
+    print("[DEBUG] Enviando TTS:", text)
     spawn(function()
         local success, result = pcall(function()
             return HttpService:PostAsync(
@@ -140,7 +141,9 @@ local function sendTTS(text)
                 Enum.HttpContentType.ApplicationJson
             )
         end)
-        if not success then
+        if success then
+            print("[TTS] Sucesso!")
+        else
             warn("[TTS] Erro:", result)
         end
     end)
@@ -228,16 +231,22 @@ local function setupPlayerChat(plr)
     if plr == player then return end
     
     plr.Chatted:Connect(function(message)
+        print("[DEBUG] Player", plr.DisplayName, "falou:", message)
+        print("[DEBUG] All Chat ativado?", allChatEnabled)
+        
         local isNearby = isPlayerNearby(plr)
         local isQuestion = message:sub(-1) == "?"
         
         if aiChatEnabled and isNearby and isQuestion then
+            print("[DEBUG] Enviando para IA")
             sendAI(message, plr.DisplayName)
             return
         end
         
         if allChatEnabled and not aiProcessing then
-            sendTTS(plr.DisplayName .. " disse: " .. message)
+            local textToSpeak = plr.DisplayName .. " falou " .. message
+            print("[DEBUG] Falando:", textToSpeak)
+            sendTTS(textToSpeak)
         end
     end)
 end
