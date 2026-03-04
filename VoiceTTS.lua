@@ -1,9 +1,11 @@
--- Voice TTS + AI Chat
+-- Voice TTS + AI Chat (HTTP Version)
 print("[VoiceTTS] Iniciando...")
 
 local player = game.Players.LocalPlayer
 local UIS = game:GetService("UserInputService")
 local HttpService = game:GetService("HttpService")
+
+local SERVER_URL = "http://localhost:5000"
 
 pcall(function()
     if game.CoreGui:FindFirstChild("VoiceTTSGui") then
@@ -11,7 +13,7 @@ pcall(function()
     end
 end)
 
--- GUI
+-- GUI (mesmo código anterior)
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "VoiceTTSGui"
 ScreenGui.ResetOnSpawn = false
@@ -32,7 +34,6 @@ UIStroke.Parent = MainFrame
 UIStroke.Color = Color3.fromRGB(0, 0, 0)
 UIStroke.Thickness = 3
 
--- Title
 local Title = Instance.new("TextLabel")
 Title.Parent = MainFrame
 Title.BackgroundTransparency = 1
@@ -45,7 +46,6 @@ Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Position = UDim2.new(0, 10, 0, 0)
 Title.Active = true
 
--- Rejoin Button
 local rejoinBtn = Instance.new("TextButton")
 rejoinBtn.Parent = MainFrame
 rejoinBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
@@ -128,23 +128,45 @@ local ttsEnabled = false
 local allChatEnabled = false
 local aiChatEnabled = false
 local aiProcessing = false
-local messageQueue = {}
-local spokenMessages = {}
 local PROXIMITY_DISTANCE = 50
 
-local function addToQueue(text)
-    if spokenMessages[text] then return end
-    table.insert(messageQueue, text)
-    pcall(function()
-        writefile("tts_message.txt", table.concat(messageQueue, "\n"))
+-- HTTP Functions
+local function sendTTS(text)
+    spawn(function()
+        local success, result = pcall(function()
+            return HttpService:PostAsync(
+                SERVER_URL .. "/tts",
+                HttpService:JSONEncode({text = text}),
+                Enum.HttpContentType.ApplicationJson
+            )
+        end)
+        if not success then
+            warn("[TTS] Erro:", result)
+        end
     end)
 end
 
-local function clearQueue()
-    messageQueue = {}
-    spokenMessages = {}
-    pcall(function()
-        writefile("tts_message.txt", "")
+local function sendAI(question, playerName)
+    if aiProcessing then return end
+    aiProcessing = true
+    
+    spawn(function()
+        local success, result = pcall(function()
+            return HttpService:PostAsync(
+                SERVER_URL .. "/ai",
+                HttpService:JSONEncode({question = question, player = playerName}),
+                Enum.HttpContentType.ApplicationJson
+            )
+        end)
+        
+        wait(2)
+        aiProcessing = false
+        
+        if not success then
+            warn("[AI] Erro:", result)
+        else
+            print("[AI] Resposta enviada")
+        end
     end)
 end
 
@@ -160,34 +182,12 @@ local function isPlayerNearby(plr)
     return distance <= PROXIMITY_DISTANCE
 end
 
-local function askAI(question, playerName)
-    if aiProcessing then return end
-    aiProcessing = true
-    
-    print("[AI] Pergunta de", playerName, ":", question)
-    
-    pcall(function()
-        writefile("ai_question.txt", playerName .. " perguntou: " .. question)
-    end)
-    
-    spawn(function()
-        wait(5)
-        aiProcessing = false
-    end)
-end
-
 -- Button Events
 ttsBtn.MouseButton1Click:Connect(function()
     ttsEnabled = not ttsEnabled
     ttsIndicator.BackgroundColor3 = ttsEnabled and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
-    pcall(function()
-        writefile("tts_enabled.txt", ttsEnabled and "1" or "0")
-    end)
     if ttsEnabled then
-        clearQueue()
-        addToQueue("Oi Xexelento")
-    else
-        clearQueue()
+        sendTTS("Oi Xexelento")
     end
     print("[TTS]", ttsEnabled and "Ativado" or "Desativado")
 end)
@@ -195,20 +195,12 @@ end)
 allChatBtn.MouseButton1Click:Connect(function()
     allChatEnabled = not allChatEnabled
     allChatIndicator.BackgroundColor3 = allChatEnabled and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
-    pcall(function()
-        writefile("all_chat_enabled.txt", allChatEnabled and "1" or "0")
-    end)
-    clearQueue()
     print("[All Chat]", allChatEnabled and "Ativado" or "Desativado")
 end)
 
 aiChatBtn.MouseButton1Click:Connect(function()
     aiChatEnabled = not aiChatEnabled
     aiChatIndicator.BackgroundColor3 = aiChatEnabled and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
-    pcall(function()
-        writefile("ai_enabled.txt", aiChatEnabled and "1" or "0")
-    end)
-    clearQueue()
     print("[AI]", aiChatEnabled and "Ativado" or "Desativado")
 end)
 
@@ -219,48 +211,33 @@ end)
 
 -- Chat Events
 player.Chatted:Connect(function(message)
-    -- Prefixo /tts para falar sem aparecer no chat
     if message:sub(1, 5) == "/tts " then
         if ttsEnabled then
             local text = message:sub(6)
-            print("[TTS] Você (privado):", text)
-            clearQueue()
-            addToQueue(text)
+            sendTTS(text)
         end
         return
     end
     
-    -- Voice TTS normal (aparece no chat)
     if not ttsEnabled then return end
     if message:sub(1, 1) == "/" then return end
-    print("[TTS] Você:", message)
-    clearQueue()
-    addToQueue(message)
+    sendTTS(message)
 end)
 
 local function setupPlayerChat(plr)
     if plr == player then return end
     
     plr.Chatted:Connect(function(message)
-        print("[DEBUG] Player", plr.DisplayName, "falou:", message)
-        
         local isNearby = isPlayerNearby(plr)
         local isQuestion = message:sub(-1) == "?"
         
-        -- AI Chat tem prioridade sobre All Chat
         if aiChatEnabled and isNearby and isQuestion then
-            print("[AI] Detectou pergunta próxima!")
-            clearQueue()
-            askAI(message, plr.DisplayName)
+            sendAI(message, plr.DisplayName)
             return
         end
         
-        -- All Chat normal (lê se estiver ativado e Voice TTS não estiver processando)
         if allChatEnabled and not aiProcessing then
-            print("[All Chat] Adicionando:", plr.DisplayName, "disse:", message)
-            addToQueue(plr.DisplayName .. " disse: " .. message)
-        else
-            print("[DEBUG] All Chat desativado ou AI processando")
+            sendTTS(plr.DisplayName .. " disse: " .. message)
         end
     end)
 end
@@ -278,4 +255,4 @@ UIS.InputBegan:Connect(function(input, gameProcessed)
     end
 end)
 
-print("[VoiceTTS + AI] Carregado! Z=Menu")
+print("[VoiceTTS + AI] Carregado! Z=Menu | Server:", SERVER_URL)
