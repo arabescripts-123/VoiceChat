@@ -349,7 +349,18 @@ allChatBtn.MouseButton1Click:Connect(function()
         isProcessingQueue = false
         filaIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
         newIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-        print("[All Chat] Desativado - Fila limpa")
+        print("[All Chat] Desativado - Interrompendo e limpando fila")
+        
+        task.spawn(function()
+            pcall(function()
+                request({
+                    Url = SERVER_URL .. "/stop",
+                    Method = "POST",
+                    Headers = {["Content-Type"] = "application/json"},
+                    Body = HttpService:JSONEncode({action = "stop"})
+                })
+            end)
+        end)
     end
     
     print("[All Chat]", allChatEnabled and "Ativado" or "Desativado")
