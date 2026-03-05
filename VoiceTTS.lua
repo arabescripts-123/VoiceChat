@@ -749,27 +749,26 @@ end)
 
 -- Music Button Events
 musicBtn.MouseButton1Click:Connect(function()
-    musicEnabled = not musicEnabled
-    musicIndicator.BackgroundColor3 = musicEnabled and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
+    print("[MUSIC] Alternando estado...")
     
-    print("[MUSIC]", musicEnabled and "Ativando..." or "Desativando...")
-    
-    task.spawn(function()
-        local success = pcall(function()
-            request({
-                Url = SERVER_URL .. "/music/toggle",
-                Method = "POST",
-                Headers = {["Content-Type"] = "application/json"},
-                Body = HttpService:JSONEncode({})
-            })
-        end)
-        
-        if success then
-            print("[MUSIC]", musicEnabled and "Ativado!" or "Desativado!")
-        else
-            warn("[MUSIC] Erro ao alternar estado")
-        end
+    -- Envia toggle para o servidor ANTES de mudar o estado local
+    local success, response = pcall(function()
+        return request({
+            Url = SERVER_URL .. "/music/toggle",
+            Method = "POST",
+            Headers = {["Content-Type"] = "application/json"},
+            Body = HttpService:JSONEncode({})
+        })
     end)
+    
+    if success and response then
+        local data = HttpService:JSONDecode(response.Body)
+        musicEnabled = data.enabled
+        musicIndicator.BackgroundColor3 = musicEnabled and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
+        print("[MUSIC]", musicEnabled and "Ativado!" or "Desativado!")
+    else
+        warn("[MUSIC] Erro ao alternar estado")
+    end
 end)
 
 musicPlayBtn.MouseButton1Click:Connect(function()
