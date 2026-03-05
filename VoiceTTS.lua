@@ -533,13 +533,14 @@ end
 
 -- Music Functions
 local function searchMusic(query, playerName)
-    -- Para música anterior automaticamente
-    if musicPlaying then
-        stopMusic()
-        task.wait(0.5)
-    end
-    
     print("[MUSIC] Buscando:", query)
+    
+    -- Para música anterior e aguarda
+    if musicPlaying then
+        musicPlaying = false
+        stopMusic()
+        task.wait(1)
+    end
     
     -- Muda para estado "procurando" (fundo vermelho)
     musicPlayBtn.Text = "Tocar"
@@ -782,12 +783,12 @@ local function setupPlayerChat(plr)
     plr.Chatted:Connect(function(message)
         print("[DEBUG] Player", plr.DisplayName, "falou:", message)
         
-        -- Detecta comando "tocar"
-        local lowerMsg = message:lower()
-        if musicEnabled and lowerMsg:sub(1, 5) == "tocar" then
-            local songName = message:sub(7)
+        -- Detecta comando "tocar" (case insensitive)
+        local lowerMsg = string.lower(message)
+        if musicEnabled and string.sub(lowerMsg, 1, 5) == "tocar" then
+            local songName = string.sub(message, 7)  -- Pega do caractere 7 em diante (após "tocar ")
             if #songName > 0 then
-                print("[MUSIC] Comando detectado:", songName)
+                print("[MUSIC] Comando detectado de", plr.DisplayName, ":", songName)
                 musicInputBox.Text = plr.DisplayName .. " tocou: " .. songName
                 searchMusic(songName, plr.DisplayName)
                 return
