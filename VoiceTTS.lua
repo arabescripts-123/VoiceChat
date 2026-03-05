@@ -119,6 +119,76 @@ local rejoinCorner = Instance.new("UICorner")
 rejoinCorner.CornerRadius = UDim.new(0, 6)
 rejoinCorner.Parent = rejoinBtn
 
+local infoBtn = Instance.new("TextButton")
+infoBtn.Parent = MainFrame
+infoBtn.BackgroundColor3 = Color3.fromRGB(100, 100, 255)
+infoBtn.Position = UDim2.new(1, -70, 0, 3)
+infoBtn.Size = UDim2.new(0, 30, 0, 28)
+infoBtn.Font = Enum.Font.GothamBold
+infoBtn.Text = "!"
+infoBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+infoBtn.TextSize = 16
+
+local infoCorner = Instance.new("UICorner")
+infoCorner.CornerRadius = UDim.new(0, 6)
+infoCorner.Parent = infoBtn
+
+-- Info Panel
+local InfoPanel = Instance.new("Frame")
+InfoPanel.Parent = ScreenGui
+InfoPanel.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+InfoPanel.Position = UDim2.new(0.5, -150, 0.5, -100)
+InfoPanel.Size = UDim2.new(0, 300, 0, 200)
+InfoPanel.Visible = false
+InfoPanel.ZIndex = 10
+
+local infoPanelCorner = Instance.new("UICorner")
+infoPanelCorner.CornerRadius = UDim.new(0, 8)
+infoPanelCorner.Parent = InfoPanel
+
+local infoPanelStroke = Instance.new("UIStroke")
+infoPanelStroke.Parent = InfoPanel
+infoPanelStroke.Color = Color3.fromRGB(100, 100, 255)
+infoPanelStroke.Thickness = 2
+
+local infoTitle = Instance.new("TextLabel")
+infoTitle.Parent = InfoPanel
+infoTitle.BackgroundTransparency = 1
+infoTitle.Position = UDim2.new(0, 10, 0, 10)
+infoTitle.Size = UDim2.new(1, -20, 0, 30)
+infoTitle.Font = Enum.Font.GothamBold
+infoTitle.Text = "Uso das APIs"
+infoTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+infoTitle.TextSize = 16
+infoTitle.TextXAlignment = Enum.TextXAlignment.Left
+
+local infoText = Instance.new("TextLabel")
+infoText.Parent = InfoPanel
+infoText.BackgroundTransparency = 1
+infoText.Position = UDim2.new(0, 10, 0, 50)
+infoText.Size = UDim2.new(1, -20, 1, -90)
+infoText.Font = Enum.Font.Gotham
+infoText.Text = "Carregando..."
+infoText.TextColor3 = Color3.fromRGB(200, 200, 200)
+infoText.TextSize = 12
+infoText.TextXAlignment = Enum.TextXAlignment.Left
+infoText.TextYAlignment = Enum.TextYAlignment.Top
+infoText.TextWrapped = true
+
+local closeInfoBtn = Instance.new("TextButton")
+closeInfoBtn.Parent = InfoPanel
+closeInfoBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+closeInfoBtn.Position = UDim2.new(0.5, -40, 1, -45)
+closeInfoBtn.Size = UDim2.new(0, 80, 0, 30)
+closeInfoBtn.Font = Enum.Font.GothamBold
+closeInfoBtn.Text = "Fechar"
+closeInfoBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeInfoBtn.TextSize = 13
+
+local closeInfoCorner = Instance.new("UICorner")
+closeInfoCorner.CornerRadius = UDim.new(0, 6)
+closeInfoCorner.Parent = closeInfoBtn
+
 -- Dragging
 local dragging, dragInput, dragStart, startPos
 
@@ -325,13 +395,22 @@ narratorTimer.Position = UDim2.new(1, -50, 0, 135)
 narratorTimer.Size = UDim2.new(0, 40, 0, 35)
 narratorTimer.Font = Enum.Font.GothamBold
 narratorTimer.Text = ""
-narratorTimer.TextColor3 = Color3.fromRGB(255, 255, 255)
+narratorTimer.TextColor3 = Color3.fromRGB(0, 0, 0)
 narratorTimer.TextSize = 11
 narratorTimer.Visible = false
 
 local narratorTimerCorner = Instance.new("UICorner")
 narratorTimerCorner.CornerRadius = UDim.new(0, 6)
 narratorTimerCorner.Parent = narratorTimer
+
+-- Spinner de Loading
+local narratorSpinner = Instance.new("ImageLabel")
+narratorSpinner.Parent = narratorTimer
+narratorSpinner.BackgroundTransparency = 1
+narratorSpinner.Position = UDim2.new(0.5, -12, 0.5, -12)
+narratorSpinner.Size = UDim2.new(0, 24, 0, 24)
+narratorSpinner.Image = "rbxasset://textures/ui/LoadingCircle.png"
+narratorSpinner.Visible = false
 
 -- ABA 3: MÚSICA
 local musicBtn, musicIndicator = createButton("Música YouTube", Content3, 5)
@@ -868,10 +947,10 @@ end)
 
 -- Sistema de Timer do Narrador
 task.spawn(function()
+    local spinnerRotation = 0
     while true do
-        task.wait(1)
+        task.wait(0.05)
         if narratorEnabled then
-            -- Verifica status do narrador no servidor
             task.spawn(function()
                 local success, response = pcall(function()
                     return request({
@@ -883,13 +962,21 @@ task.spawn(function()
                 
                 if success and response then
                     local data = HttpService:JSONDecode(response.Body)
-                    if data.time_remaining and data.time_remaining > 0 then
+                    if data.loading then
                         narratorTimer.Visible = true
+                        narratorTimer.Text = ""
+                        narratorSpinner.Visible = true
+                        spinnerRotation = (spinnerRotation + 10) % 360
+                        narratorSpinner.Rotation = spinnerRotation
+                    elseif data.time_remaining and data.time_remaining > 0 then
+                        narratorTimer.Visible = true
+                        narratorSpinner.Visible = false
                         local minutes = math.floor(data.time_remaining / 60)
                         local seconds = math.floor(data.time_remaining % 60)
                         narratorTimer.Text = string.format("%d:%02d", minutes, seconds)
                     else
                         narratorTimer.Visible = false
+                        narratorSpinner.Visible = false
                     end
                 end
             end)
@@ -900,6 +987,35 @@ end)
 rejoinBtn.MouseButton1Click:Connect(function()
     local TeleportService = game:GetService("TeleportService")
     TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, player)
+end)
+
+infoBtn.MouseButton1Click:Connect(function()
+    InfoPanel.Visible = true
+    task.spawn(function()
+        local success, response = pcall(function()
+            return request({
+                Url = SERVER_URL .. "/api/usage",
+                Method = "GET",
+                Headers = {["Content-Type"] = "application/json"}
+            })
+        end)
+        
+        if success and response then
+            local data = HttpService:JSONDecode(response.Body)
+            infoText.Text = string.format(
+                "Gemini AI:\n%s\n\nElevenLabs (Voz IA):\n%s\n\nYouTube (Música):\n%s\n\nNota: Verifique os limites\ndiretamente nos sites oficiais.",
+                data.gemini or "N/A",
+                data.elevenlabs or "N/A",
+                data.youtube or "N/A"
+            )
+        else
+            infoText.Text = "Erro ao carregar informações.\nVerifique se o servidor está rodando."
+        end
+    end)
+end)
+
+closeInfoBtn.MouseButton1Click:Connect(function()
+    InfoPanel.Visible = false
 end)
 
 -- Music Button Events
