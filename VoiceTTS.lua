@@ -539,6 +539,8 @@ local function searchMusic(query)
         task.wait(0.5)
     end
     
+    print("[MUSIC] Buscando:", query)
+    
     task.spawn(function()
         local success, result = pcall(function()
             return request({
@@ -550,6 +552,7 @@ local function searchMusic(query)
         end)
         
         if success and result then
+            print("[MUSIC] Resposta recebida:", result.StatusCode)
             local data = HttpService:JSONDecode(result.Body)
             if data.found then
                 print("[MUSIC] Encontrada:", data.title)
@@ -558,7 +561,15 @@ local function searchMusic(query)
                 musicPlayBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
             else
                 print("[MUSIC] Não encontrada")
+                musicPlaying = false
+                musicPlayBtn.Text = "Tocar"
+                musicPlayBtn.BackgroundColor3 = Color3.fromRGB(30, 215, 96)
             end
+        else
+            warn("[MUSIC] Erro na requisição:", result)
+            musicPlaying = false
+            musicPlayBtn.Text = "Tocar"
+            musicPlayBtn.BackgroundColor3 = Color3.fromRGB(30, 215, 96)
         end
     end)
 end
@@ -744,11 +755,7 @@ musicPlayBtn.MouseButton1Click:Connect(function()
             return
         end
         
-        musicPlaying = true
-        musicPlayBtn.Text = "Interromper"
-        musicPlayBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
         searchMusic(query)
-        print("[MUSIC] Buscando:", query)
     end
 end)
 
