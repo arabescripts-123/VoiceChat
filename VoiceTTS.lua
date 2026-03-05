@@ -378,102 +378,6 @@ tab3.MouseButton1Click:Connect(function()
     tab3.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
 end)
 
-tab1.BackgroundColor3 = Color3.fromRGB(100, 100, 100)ocal aiChatBtn, aiChatIndicator = createButton("AI Chat", Content2, 5)
-
-local aiInputBox = Instance.new("TextBox")
-aiInputBox.Parent = Content2
-aiInputBox.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-aiInputBox.Position = UDim2.new(0, 10, 0, 50)
-aiInputBox.Size = UDim2.new(0, 200, 0, 30)
-aiInputBox.Font = Enum.Font.Gotham
-aiInputBox.PlaceholderText = "Pergunte algo..."
-aiInputBox.Text = ""
-aiInputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-aiInputBox.TextSize = 12
-aiInputBox.ClearTextOnFocus = false
-
-local aiInputCorner = Instance.new("UICorner")
-aiInputCorner.CornerRadius = UDim.new(0, 6)
-aiInputCorner.Parent = aiInputBox
-
-local aiSendBtn = Instance.new("TextButton")
-aiSendBtn.Parent = Content2
-aiSendBtn.BackgroundColor3 = Color3.fromRGB(100, 200, 255)
-aiSendBtn.Position = UDim2.new(0, 10, 0, 90)
-aiSendBtn.Size = UDim2.new(0, 200, 0, 30)
-aiSendBtn.Font = Enum.Font.GothamBold
-aiSendBtn.Text = "Enviar para IA"
-aiSendBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-aiSendBtn.TextSize = 13
-
-local aiSendCorner = Instance.new("UICorner")
-aiSendCorner.CornerRadius = UDim.new(0, 6)
-aiSendCorner.Parent = aiSendBtn
-
-local narratorBtn, narratorIndicator = createButton("Narrador Auto", Content2, 135)
-local narratorNowBtn = createSimpleButton("Narrar Agora", Content2, 180)
-
--- ABA 3: MÚSICA
-local musicBtn, musicIndicator = createButton("Música YouTube", Content3, 5)
-
-local musicInputBox = Instance.new("TextBox")
-musicInputBox.Parent = Content3
-musicInputBox.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-musicInputBox.Position = UDim2.new(0, 10, 0, 50)
-musicInputBox.Size = UDim2.new(0, 200, 0, 30)
-musicInputBox.Font = Enum.Font.Gotham
-musicInputBox.PlaceholderText = "Nome da música..."
-musicInputBox.Text = ""
-musicInputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-musicInputBox.TextSize = 12
-musicInputBox.ClearTextOnFocus = false
-
-local musicInputCorner = Instance.new("UICorner")
-musicInputCorner.CornerRadius = UDim.new(0, 6)
-musicInputCorner.Parent = musicInputBox
-
-local musicPlayBtn = Instance.new("TextButton")
-musicPlayBtn.Parent = Content3
-musicPlayBtn.BackgroundColor3 = Color3.fromRGB(30, 215, 96)
-musicPlayBtn.Position = UDim2.new(0, 10, 0, 90)
-musicPlayBtn.Size = UDim2.new(0, 200, 0, 30)
-musicPlayBtn.Font = Enum.Font.GothamBold
-musicPlayBtn.Text = "Tocar"
-musicPlayBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-musicPlayBtn.TextSize = 13
-
-local musicPlayCorner = Instance.new("UICorner")
-musicPlayCorner.CornerRadius = UDim.new(0, 6)
-musicPlayCorner.Parent = musicPlayBtn
-
--- Tab System Logic
-tab1.MouseButton1Click:Connect(function()
-    Content1.Visible = true
-    Content2.Visible = false
-    Content3.Visible = false
-    tab1.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
-    tab2.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    tab3.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-end)
-
-tab2.MouseButton1Click:Connect(function()
-    Content1.Visible = false
-    Content2.Visible = true
-    Content3.Visible = false
-    tab1.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    tab2.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
-    tab3.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-end)
-
-tab3.MouseButton1Click:Connect(function()
-    Content1.Visible = false
-    Content2.Visible = false
-    Content3.Visible = true
-    tab1.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    tab2.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    tab3.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
-end)
-
 tab1.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
 
 -- Variables
@@ -1065,3 +969,4 @@ UIS.InputBegan:Connect(function(input, gameProcessed)
 end)
 
 print("[VoiceTTS + AI] Carregado! Z=Menu | Server:", SERVER_URL)
+
