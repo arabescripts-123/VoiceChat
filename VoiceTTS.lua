@@ -305,6 +305,7 @@ local PROXIMITY_DISTANCE = 50
 local ttsSpeed = 1.0
 local musicEnabled = false
 local musicPlaying = false
+local musicSearching = false
 
 -- Queue System
 local queueMode = true
@@ -542,6 +543,9 @@ local function searchMusic(query, playerName)
         task.wait(1)
     end
     
+    -- Marca como buscando
+    musicSearching = true
+    
     -- Muda para estado "procurando" (fundo vermelho)
     musicPlayBtn.Text = "Tocar"
     musicPlayBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
@@ -556,12 +560,19 @@ local function searchMusic(query, playerName)
             })
         end)
         
+        -- Se foi cancelado durante a busca
+        if not musicSearching then
+            print("[MUSIC] Busca cancelada")
+            return
+        end
+        
         if success and result then
             print("[MUSIC] Resposta recebida:", result.StatusCode)
             local data = HttpService:JSONDecode(result.Body)
-            if data.found then
+            if data.found and musicSearching then
                 print("[MUSIC] Encontrada:", data.title)
                 musicPlaying = true
+                musicSearching = false
                 musicPlayBtn.Text = "Interromper"
                 musicPlayBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
                 
@@ -580,12 +591,14 @@ local function searchMusic(query, playerName)
             else
                 print("[MUSIC] Não encontrada")
                 musicPlaying = false
+                musicSearching = false
                 musicPlayBtn.Text = "Tocar"
                 musicPlayBtn.BackgroundColor3 = Color3.fromRGB(30, 215, 96)
             end
         else
             warn("[MUSIC] Erro na requisição:", result)
             musicPlaying = false
+            musicSearching = false
             musicPlayBtn.Text = "Tocar"
             musicPlayBtn.BackgroundColor3 = Color3.fromRGB(30, 215, 96)
         end
@@ -755,6 +768,17 @@ end)
 musicPlayBtn.MouseButton1Click:Connect(function()
     if not musicEnabled then
         print("[MUSIC] Sistema desativado")
+        return
+    end
+    
+    -- Se está buscando, cancela a busca
+    if musicSearching then
+        print("[MUSIC] Cancelando busca")
+        musicSearching = false
+        musicPlaying = false
+        musicPlayBtn.Text = "Tocar"
+        musicPlayBtn.BackgroundColor3 = Color3.fromRGB(30, 215, 96)
+        stopMusic()
         return
     end
     
