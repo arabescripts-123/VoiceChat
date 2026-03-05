@@ -459,6 +459,11 @@ local function handleTTS(text, priority)
 end
 
 local function sendAI(question, playerName)
+    if not aiChatEnabled then
+        print("[AI] Chat desativado")
+        return
+    end
+    
     if aiProcessing then return end
     aiProcessing = true
     
@@ -475,7 +480,7 @@ local function sendAI(question, playerName)
                 Headers = {
                     ["Content-Type"] = "application/json"
                 },
-                Body = HttpService:JSONEncode({question = question, player = playerName})
+                Body = HttpService:JSONEncode({question = question, player = playerName, ai_enabled = aiChatEnabled})
             })
             return response
         end)
@@ -613,7 +618,7 @@ allChatBtn.MouseButton1Click:Connect(function()
         isPlayingNew = false
         filaIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
         newIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-        print("[All Chat] Desativado - Interrompendo e limpando fila")
+        print("[All Chat] Desativado - Parando voz instantaneamente")
         
         task.spawn(function()
             pcall(function()
@@ -633,10 +638,32 @@ end)
 aiChatBtn.MouseButton1Click:Connect(function()
     aiChatEnabled = not aiChatEnabled
     aiChatIndicator.BackgroundColor3 = aiChatEnabled and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
+    
+    -- Se desativar AI Chat, para a IA imediatamente
+    if not aiChatEnabled and aiProcessing then
+        aiProcessing = false
+        task.spawn(function()
+            pcall(function()
+                request({
+                    Url = SERVER_URL .. "/stop",
+                    Method = "POST",
+                    Headers = {["Content-Type"] = "application/json"},
+                    Body = HttpService:JSONEncode({action = "stop"})
+                })
+            end)
+        end)
+        print("[AI] Desativado - Interrompendo fala")
+    end
+    
     print("[AI]", aiChatEnabled and "Ativado" or "Desativado")
 end)
 
 aiSendBtn.MouseButton1Click:Connect(function()
+    if not aiChatEnabled then
+        print("[AI] Chat desativado - Ative primeiro")
+        return
+    end
+    
     local question = aiInputBox.Text
     if question == "" or #question < 2 then
         print("[AI] Pergunta muito curta")
