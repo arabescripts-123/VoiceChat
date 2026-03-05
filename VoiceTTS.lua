@@ -317,6 +317,22 @@ aiSendCorner.Parent = aiSendBtn
 local narratorBtn, narratorIndicator = createButton("Narrador Auto", Content2, 135)
 local narratorNowBtn = createSimpleButton("Narrar Agora", Content2, 180)
 
+-- Timer do Narrador Auto
+local narratorTimer = Instance.new("TextLabel")
+narratorTimer.Parent = Content2
+narratorTimer.BackgroundColor3 = Color3.fromRGB(50, 255, 50)
+narratorTimer.Position = UDim2.new(1, -50, 0, 135)
+narratorTimer.Size = UDim2.new(0, 40, 0, 35)
+narratorTimer.Font = Enum.Font.GothamBold
+narratorTimer.Text = ""
+narratorTimer.TextColor3 = Color3.fromRGB(255, 255, 255)
+narratorTimer.TextSize = 11
+narratorTimer.Visible = false
+
+local narratorTimerCorner = Instance.new("UICorner")
+narratorTimerCorner.CornerRadius = UDim.new(0, 6)
+narratorTimerCorner.Parent = narratorTimer
+
 -- ABA 3: MÚSICA
 local musicBtn, musicIndicator = createButton("Música YouTube", Content3, 5)
 
@@ -818,18 +834,22 @@ narratorBtn.MouseButton1Click:Connect(function()
     narratorEnabled = not narratorEnabled
     narratorIndicator.BackgroundColor3 = narratorEnabled and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
     
+    if not narratorEnabled then
+        narratorTimer.Visible = false
+    end
+    
     task.spawn(function()
         pcall(function()
             request({
                 Url = SERVER_URL .. "/narrator",
                 Method = "POST",
                 Headers = {["Content-Type"] = "application/json"},
-                Body = HttpService:JSONEncode({enabled = narratorEnabled})
+                Body = HttpService:JSONEncode({enabled = narratorEnabled, force = true})
             })
         end)
     end)
     
-    print("[NARRADOR]", narratorEnabled and "Ativado - Narrando a cada 2 minutos" or "Desativado")
+    print("[NARRADOR]", narratorEnabled and "Ativado - Narrando a cada 2 minutos (FORÇADO)" or "Desativado")
 end)
 
 narratorNowBtn.MouseButton1Click:Connect(function()
@@ -840,10 +860,41 @@ narratorNowBtn.MouseButton1Click:Connect(function()
                 Url = SERVER_URL .. "/narrator/now",
                 Method = "POST",
                 Headers = {["Content-Type"] = "application/json"},
-                Body = HttpService:JSONEncode({})
+                Body = HttpService:JSONEncode({force = true})
             })
         end)
     end)
+end)
+
+-- Sistema de Timer do Narrador
+task.spawn(function()
+    while true do
+        task.wait(1)
+        if narratorEnabled then
+            -- Verifica status do narrador no servidor
+            task.spawn(function()
+                local success, response = pcall(function()
+                    return request({
+                        Url = SERVER_URL .. "/narrator/status",
+                        Method = "GET",
+                        Headers = {["Content-Type"] = "application/json"}
+                    })
+                end)
+                
+                if success and response then
+                    local data = HttpService:JSONDecode(response.Body)
+                    if data.time_remaining and data.time_remaining > 0 then
+                        narratorTimer.Visible = true
+                        local minutes = math.floor(data.time_remaining / 60)
+                        local seconds = math.floor(data.time_remaining % 60)
+                        narratorTimer.Text = string.format("%d:%02d", minutes, seconds)
+                    else
+                        narratorTimer.Visible = false
+                    end
+                end
+            end)
+        end
+    end
 end)
 
 rejoinBtn.MouseButton1Click:Connect(function()
