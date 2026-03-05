@@ -859,29 +859,38 @@ musicBtn.MouseButton1Click:Connect(function()
     end
     
     musicToggling = true
-    print("[MUSIC] Alternando estado...")
     
-    -- Envia toggle para o servidor ANTES de mudar o estado local
-    local success, response = pcall(function()
-        return request({
-            Url = SERVER_URL .. "/music/toggle",
-            Method = "POST",
-            Headers = {["Content-Type"] = "application/json"},
-            Body = HttpService:JSONEncode({})
-        })
+    -- Muda visual imediatamente para feedback instantâneo
+    musicEnabled = not musicEnabled
+    musicIndicator.BackgroundColor3 = musicEnabled and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
+    print("[MUSIC]", musicEnabled and "ATIVANDO..." or "DESATIVANDO...")
+    
+    -- Envia para servidor em background
+    task.spawn(function()
+        local success, response = pcall(function()
+            return request({
+                Url = SERVER_URL .. "/music/toggle",
+                Method = "POST",
+                Headers = {["Content-Type"] = "application/json"},
+                Body = HttpService:JSONEncode({})
+            })
+        end)
+        
+        if success and response then
+            local data = HttpService:JSONDecode(response.Body)
+            musicEnabled = data.enabled
+            musicIndicator.BackgroundColor3 = musicEnabled and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
+            print("[MUSIC]", musicEnabled and "ATIVADO!" or "DESATIVADO!")
+        else
+            warn("[MUSIC] Erro ao alternar estado")
+            -- Reverte em caso de erro
+            musicEnabled = not musicEnabled
+            musicIndicator.BackgroundColor3 = musicEnabled and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
+        end
+        
+        task.wait(0.2)
+        musicToggling = false
     end)
-    
-    if success and response then
-        local data = HttpService:JSONDecode(response.Body)
-        musicEnabled = data.enabled
-        musicIndicator.BackgroundColor3 = musicEnabled and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
-        print("[MUSIC]", musicEnabled and "ATIVADO!" or "DESATIVADO!")
-    else
-        warn("[MUSIC] Erro ao alternar estado")
-    end
-    
-    task.wait(0.5)
-    musicToggling = false
 end)
 
 musicPlayBtn.MouseButton1Click:Connect(function()
