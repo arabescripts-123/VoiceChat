@@ -208,7 +208,7 @@ local allChatBtn, allChatIndicator = createButton("All Chat TTS", 0, 95)
 local filaBtn, filaIndicator = createModeButton("Fila", 10, 140)
 local newBtn, newIndicator = createModeButton("New", 115, 140)
 
--- Speed Slider
+-- Speed Slider (abaixo de Fila/New)
 local speedLabel = Instance.new("TextLabel")
 speedLabel.Parent = ScrollFrame
 speedLabel.BackgroundTransparency = 1
@@ -241,6 +241,7 @@ speedHandle.BorderSizePixel = 0
 local speedHandleCorner = Instance.new("UICorner")
 speedHandleCorner.CornerRadius = UDim.new(1, 0)
 speedHandleCorner.Parent = speedHandle
+
 local aiChatBtn, aiChatIndicator = createButton("AI Chat", 0, 220)
 
 -- AI Input TextBox
@@ -309,27 +310,8 @@ musicPlayCorner.Parent = musicPlayBtn
 
 -- Global Voice Button (Independent)
 local globalVoiceBtn, globalVoiceIndicator = createButton("Voz Global", 0, 470)
-speedLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-speedLabel.TextSize = 11
-speedLabel.TextXAlignment = Enum.TextXAlignment.Left
 
 
-speedTrack.BorderSizePixel = 0
-
-local speedTrackCorner = Instance.new("UICorner")
-speedTrackCorner.CornerRadius = UDim.new(1, 0)
-speedTrackCorner.Parent = speedTrack
-
-local speedHandle = Instance.new("Frame")
-speedHandle.Parent = speedTrack
-speedHandle.BackgroundColor3 = Color3.fromRGB(100, 200, 255)
-speedHandle.Position = UDim2.new(0, 0, 0.5, -8)
-speedHandle.Size = UDim2.new(0, 16, 0, 16)
-speedHandle.BorderSizePixel = 0
-
-local speedHandleCorner = Instance.new("UICorner")
-speedHandleCorner.CornerRadius = UDim.new(1, 0)
-speedHandleCorner.Parent = speedHandle
 
 -- Variables
 local allChatEnabled = false
