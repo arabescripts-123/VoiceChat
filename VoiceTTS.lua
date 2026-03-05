@@ -541,7 +541,7 @@ local function searchMusic(query, playerName)
         print("[MUSIC] Parando música anterior...")
         musicPlaying = false
         stopMusic()
-        task.wait(1)
+        task.wait(1.5)  -- Aguarda mais tempo para liberar arquivo
     end
     
     -- Marca como buscando
