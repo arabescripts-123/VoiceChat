@@ -32,7 +32,7 @@ local MainFrame = Instance.new("Frame")
 MainFrame.Parent = ScreenGui
 MainFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 MainFrame.Position = UDim2.new(0.02, 0, 0.3, 0)
-MainFrame.Size = UDim2.new(0, 220, 0, 420)
+MainFrame.Size = UDim2.new(0, 220, 0, 520)
 
 local UICorner = Instance.new("UICorner")
 UICorner.CornerRadius = UDim.new(0, 8)
@@ -230,6 +230,39 @@ local aiSendCorner = Instance.new("UICorner")
 aiSendCorner.CornerRadius = UDim.new(0, 6)
 aiSendCorner.Parent = aiSendBtn
 
+-- Music Controls
+local musicBtn, musicIndicator = createButton("Música YouTube", 0, 395)
+
+local musicInputBox = Instance.new("TextBox")
+musicInputBox.Parent = MainFrame
+musicInputBox.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+musicInputBox.Position = UDim2.new(0, 10, 0, 440)
+musicInputBox.Size = UDim2.new(0, 200, 0, 30)
+musicInputBox.Font = Enum.Font.Gotham
+musicInputBox.PlaceholderText = "Nome da música..."
+musicInputBox.Text = ""
+musicInputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+musicInputBox.TextSize = 12
+musicInputBox.ClearTextOnFocus = false
+
+local musicInputCorner = Instance.new("UICorner")
+musicInputCorner.CornerRadius = UDim.new(0, 6)
+musicInputCorner.Parent = musicInputBox
+
+local musicPlayBtn = Instance.new("TextButton")
+musicPlayBtn.Parent = MainFrame
+musicPlayBtn.BackgroundColor3 = Color3.fromRGB(30, 215, 96)
+musicPlayBtn.Position = UDim2.new(0, 10, 0, 480)
+musicPlayBtn.Size = UDim2.new(0, 200, 0, 30)
+musicPlayBtn.Font = Enum.Font.GothamBold
+musicPlayBtn.Text = "Tocar"
+musicPlayBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+musicPlayBtn.TextSize = 13
+
+local musicPlayCorner = Instance.new("UICorner")
+musicPlayCorner.CornerRadius = UDim.new(0, 6)
+musicPlayCorner.Parent = musicPlayBtn
+
 -- Speed Slider
 local speedLabel = Instance.new("TextLabel")
 speedLabel.Parent = MainFrame
@@ -270,6 +303,8 @@ local aiChatEnabled = false
 local aiProcessing = false
 local PROXIMITY_DISTANCE = 50
 local ttsSpeed = 1.0
+local musicEnabled = false
+local musicPlaying = false
 
 -- Queue System
 local queueMode = true
@@ -476,6 +511,42 @@ local function isPlayerNearby(plr)
     return distance <= PROXIMITY_DISTANCE
 end
 
+-- Music Functions
+local function searchMusic(query)
+    task.spawn(function()
+        local success, result = pcall(function()
+            return request({
+                Url = SERVER_URL .. "/music/search",
+                Method = "POST",
+                Headers = {["Content-Type"] = "application/json"},
+                Body = HttpService:JSONEncode({query = query})
+            })
+        end)
+        
+        if success and result then
+            local data = HttpService:JSONDecode(result.Body)
+            if data.found then
+                print("[MUSIC] Encontrada:", data.title)
+            else
+                print("[MUSIC] Não encontrada")
+            end
+        end
+    end)
+end
+
+local function stopMusic()
+    task.spawn(function()
+        pcall(function()
+            request({
+                Url = SERVER_URL .. "/music/stop",
+                Method = "POST",
+                Headers = {["Content-Type"] = "application/json"},
+                Body = HttpService:JSONEncode({})
+            })
+        end)
+    end)
+end
+
 -- Button Events
 voiceSendBtn.MouseButton1Click:Connect(function()
     local text = voiceInputBox.Text
@@ -582,11 +653,70 @@ rejoinBtn.MouseButton1Click:Connect(function()
     TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, player)
 end)
 
+-- Music Button Events
+musicBtn.MouseButton1Click:Connect(function()
+    musicEnabled = not musicEnabled
+    musicIndicator.BackgroundColor3 = musicEnabled and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
+    
+    task.spawn(function()
+        pcall(function()
+            request({
+                Url = SERVER_URL .. "/music/toggle",
+                Method = "POST",
+                Headers = {["Content-Type"] = "application/json"},
+                Body = HttpService:JSONEncode({})
+            })
+        end)
+    end)
+    
+    print("[MUSIC]", musicEnabled and "Ativado" or "Desativado")
+end)
+
+musicPlayBtn.MouseButton1Click:Connect(function()
+    if not musicEnabled then
+        print("[MUSIC] Sistema desativado")
+        return
+    end
+    
+    if musicPlaying then
+        -- Interromper
+        musicPlaying = false
+        musicPlayBtn.Text = "Tocar"
+        musicPlayBtn.BackgroundColor3 = Color3.fromRGB(30, 215, 96)
+        stopMusic()
+        print("[MUSIC] Parado")
+    else
+        -- Tocar
+        local query = musicInputBox.Text
+        if query == "" or #query < 2 then
+            print("[MUSIC] Nome muito curto")
+            return
+        end
+        
+        musicPlaying = true
+        musicPlayBtn.Text = "Interromper"
+        musicPlayBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+        searchMusic(query)
+        print("[MUSIC] Buscando:", query)
+    end
+end)
+
 local function setupPlayerChat(plr)
     if plr == player then return end
     
     plr.Chatted:Connect(function(message)
         print("[DEBUG] Player", plr.DisplayName, "falou:", message)
+        
+        -- Detecta comando "tocar"
+        local lowerMsg = message:lower()
+        if musicEnabled and lowerMsg:sub(1, 5) == "tocar" then
+            local songName = message:sub(7)
+            if #songName > 0 then
+                print("[MUSIC] Comando detectado:", songName)
+                searchMusic(songName)
+                return
+            end
+        end
         
         local isNearby = isPlayerNearby(plr)
         local isQuestion = message:sub(-1) == "?"
