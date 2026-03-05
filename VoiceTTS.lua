@@ -768,7 +768,7 @@ end)
 
 musicPlayBtn.MouseButton1Click:Connect(function()
     if not musicEnabled then
-        print("[MUSIC] Sistema desativado")
+        print("[MUSIC] Sistema desativado - Ative o botão 'Música YouTube' primeiro (deixe verde)")
         return
     end
     
