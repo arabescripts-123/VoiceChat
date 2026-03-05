@@ -197,6 +197,7 @@ local voiceSendBtn = createSimpleButton("Falar", 90)
 local allChatBtn, allChatIndicator = createButton("All Chat TTS", 0, 135)
 local filaBtn, filaIndicator = createModeButton("Fila", 10, 180)
 local newBtn, newIndicator = createModeButton("New", 115, 180)
+local globalVoiceBtn, globalVoiceIndicator = createButton("Voz Global", 0, 220)
 local aiChatBtn, aiChatIndicator = createButton("AI Chat", 0, 270)
 
 -- AI Input TextBox
@@ -307,6 +308,8 @@ local musicEnabled = false
 local musicPlaying = false
 local musicSearching = false
 local musicToggling = false
+local globalVoiceEnabled = false
+local globalVoiceLoop = nil
 
 -- Queue System
 local queueMode = true
@@ -733,6 +736,35 @@ end)
 rejoinBtn.MouseButton1Click:Connect(function()
     local TeleportService = game:GetService("TeleportService")
     TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, player)
+end)
+
+-- Global Voice Button
+globalVoiceBtn.MouseButton1Click:Connect(function()
+    globalVoiceEnabled = not globalVoiceEnabled
+    globalVoiceIndicator.BackgroundColor3 = globalVoiceEnabled and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
+    
+    if globalVoiceEnabled then
+        print("[VOICE] Voz Global ATIVADA - Todos te ouvem!")
+        globalVoiceLoop = task.spawn(function()
+            while globalVoiceEnabled do
+                task.wait(1)
+                pcall(function()
+                    if player.Character and player.Character:FindFirstChild("Head") then
+                        local head = player.Character.Head
+                        for _, sound in pairs(head:GetChildren()) do
+                            if sound:IsA("Sound") then
+                                sound.RollOffMaxDistance = 999999
+                                sound.RollOffMinDistance = 0
+                                sound.RollOffMode = Enum.RollOffMode.Linear
+                            end
+                        end
+                    end
+                end)
+            end
+        end)
+    else
+        print("[VOICE] Voz Global DESATIVADA")
+    end
 end)
 
 -- Music Button Events
