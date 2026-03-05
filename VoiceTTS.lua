@@ -533,6 +533,12 @@ end
 
 -- Music Functions
 local function searchMusic(query)
+    -- Para música anterior automaticamente
+    if musicPlaying then
+        stopMusic()
+        task.wait(0.5)
+    end
+    
     task.spawn(function()
         local success, result = pcall(function()
             return request({
@@ -547,6 +553,9 @@ local function searchMusic(query)
             local data = HttpService:JSONDecode(result.Body)
             if data.found then
                 print("[MUSIC] Encontrada:", data.title)
+                musicPlaying = true
+                musicPlayBtn.Text = "Interromper"
+                musicPlayBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
             else
                 print("[MUSIC] Não encontrada")
             end
@@ -755,6 +764,7 @@ local function setupPlayerChat(plr)
             local songName = message:sub(7)
             if #songName > 0 then
                 print("[MUSIC] Comando detectado:", songName)
+                musicInputBox.Text = plr.DisplayName .. " tocou: " .. songName
                 searchMusic(songName)
                 return
             end
