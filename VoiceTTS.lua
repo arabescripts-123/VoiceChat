@@ -324,8 +324,7 @@ local musicPlaying = false
 local musicSearching = false
 local musicToggling = false
 local globalVoiceEnabled = false
-local globalVoiceConnections = {}
-local audioInput = nil
+local globalVoiceLoop = nil
 
 -- Queue System
 local queueMode = true
@@ -754,99 +753,61 @@ rejoinBtn.MouseButton1Click:Connect(function()
     TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, player)
 end)
 
--- Global Voice Button (usando Nova API de Áudio)
+-- Global Voice Button (Método que FUNCIONA com exploits)
 globalVoiceBtn.MouseButton1Click:Connect(function()
     globalVoiceEnabled = not globalVoiceEnabled
     globalVoiceIndicator.BackgroundColor3 = globalVoiceEnabled and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
     
     if globalVoiceEnabled then
-        print("[GLOBAL VOICE] ATIVADO - Todos ouvem seu microfone!")
+        print("[GLOBAL VOICE] ATIVADO - Modificando propriedades de áudio!")
         
-        -- Cria o AudioDeviceInput (captura seu microfone)
-        local success, err = pcall(function()
-            audioInput = Instance.new("AudioDeviceInput")
-            audioInput.Player = player
-            audioInput.Parent = player
-            audioInput.Active = true
-        end)
-        
-        if not success then
-            warn("[GLOBAL VOICE] Erro ao criar AudioDeviceInput:", err)
-            globalVoiceEnabled = false
-            globalVoiceIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-            return
-        end
-        
-        -- Função para conectar a um jogador
-        local function connectToPlayer(targetPlayer)
-            if targetPlayer == player then return end
-            
-            pcall(function()
-                -- Cria saída de áudio para o jogador ouvir
-                local output = Instance.new("AudioDeviceOutput")
-                output.Player = targetPlayer
-                output.Parent = targetPlayer
+        globalVoiceLoop = task.spawn(function()
+            while globalVoiceEnabled do
+                task.wait(0.05) -- Atualização muito rápida
                 
-                -- Wire conecta seu microfone à saída dele (SEM distância 3D)
-                local wire = Instance.new("Wire")
-                wire.SourceInstance = audioInput
-                wire.TargetInstance = output
-                wire.Parent = output
-                
-                -- Guarda a conexão
-                globalVoiceConnections[targetPlayer.UserId] = {output = output, wire = wire}
-                print("[GLOBAL VOICE] Conectado a:", targetPlayer.DisplayName)
-            end)
-        end
-        
-        -- Conecta a todos os jogadores atuais
-        for _, plr in pairs(game.Players:GetPlayers()) do
-            connectToPlayer(plr)
-        end
-        
-        -- Conecta a novos jogadores que entrarem
-        globalVoiceConnections.playerAddedConn = game.Players.PlayerAdded:Connect(function(plr)
-            if globalVoiceEnabled then
-                task.wait(1) -- Aguarda o jogador carregar
-                connectToPlayer(plr)
-            end
-        end)
-        
-        -- Remove conexão quando jogador sair
-        globalVoiceConnections.playerRemovingConn = game.Players.PlayerRemoving:Connect(function(plr)
-            if globalVoiceConnections[plr.UserId] then
                 pcall(function()
-                    globalVoiceConnections[plr.UserId].output:Destroy()
+                    -- Modifica TODOS os sons de TODOS os jogadores
+                    for _, plr in pairs(game.Players:GetPlayers()) do
+                        if plr.Character then
+                            -- Procura em TODAS as partes do personagem
+                            for _, descendant in pairs(plr.Character:GetDescendants()) do
+                                if descendant:IsA("Sound") then
+                                    -- Remove completamente a atenuação por distância
+                                    descendant.RollOffMode = Enum.RollOffMode.Inverse
+                                    descendant.RollOffMinDistance = 999999
+                                    descendant.RollOffMaxDistance = 999999
+                                    descendant.Volume = 0.5
+                                end
+                            end
+                        end
+                    end
                 end)
-                globalVoiceConnections[plr.UserId] = nil
             end
         end)
         
     else
         print("[GLOBAL VOICE] DESATIVADO")
         
-        -- Desconecta tudo
-        if audioInput then
-            pcall(function() audioInput:Destroy() end)
-            audioInput = nil
+        -- Para o loop
+        if globalVoiceLoop then
+            task.cancel(globalVoiceLoop)
+            globalVoiceLoop = nil
         end
         
-        -- Remove todas as conexões
-        for userId, conn in pairs(globalVoiceConnections) do
-            if type(conn) == "table" and conn.output then
-                pcall(function() conn.output:Destroy() end)
+        -- Restaura configurações padrão
+        pcall(function()
+            for _, plr in pairs(game.Players:GetPlayers()) do
+                if plr.Character then
+                    for _, descendant in pairs(plr.Character:GetDescendants()) do
+                        if descendant:IsA("Sound") then
+                            descendant.RollOffMode = Enum.RollOffMode.Inverse
+                            descendant.RollOffMinDistance = 10
+                            descendant.RollOffMaxDistance = 1000
+                        end
+                    end
+                end
             end
-        end
-        
-        -- Desconecta eventos
-        if globalVoiceConnections.playerAddedConn then
-            globalVoiceConnections.playerAddedConn:Disconnect()
-        end
-        if globalVoiceConnections.playerRemovingConn then
-            globalVoiceConnections.playerRemovingConn:Disconnect()
-        end
-        
-        globalVoiceConnections = {}
+        end)
     end
 end)
 
