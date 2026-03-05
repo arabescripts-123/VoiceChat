@@ -464,7 +464,22 @@ local function sendAI(question, playerName)
         return
     end
     
-    if aiProcessing then return end
+    -- Para IA anterior se estiver falando
+    if aiProcessing then
+        print("[AI] Interrompendo resposta anterior")
+        task.spawn(function()
+            pcall(function()
+                request({
+                    Url = SERVER_URL .. "/stop",
+                    Method = "POST",
+                    Headers = {["Content-Type"] = "application/json"},
+                    Body = HttpService:JSONEncode({action = "stop"})
+                })
+            end)
+        end)
+        task.wait(0.3)
+    end
+    
     aiProcessing = true
     
     print("[AI] Limpando fila antiga do All Chat TTS")
