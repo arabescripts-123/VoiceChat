@@ -759,18 +759,43 @@ globalVoiceBtn.MouseButton1Click:Connect(function()
     globalVoiceIndicator.BackgroundColor3 = globalVoiceEnabled and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
     
     if globalVoiceEnabled then
-        print("[GLOBAL VOICE] ATIVADO - Todos ouvem sem limite de distância!")
+        print("[GLOBAL VOICE] ATIVADO - Todos ouvem TUDO sem limite!")
         globalVoiceLoop = task.spawn(function()
             while globalVoiceEnabled do
-                task.wait(0.5)
+                task.wait(0.1)
                 pcall(function()
+                    -- Modifica TODOS os sons de TODOS os jogadores
                     for _, plr in pairs(game.Players:GetPlayers()) do
-                        if plr.Character and plr.Character:FindFirstChild("Head") then
-                            for _, sound in pairs(plr.Character.Head:GetChildren()) do
-                                if sound:IsA("Sound") then
-                                    sound.RollOffMaxDistance = 999999
-                                    sound.RollOffMinDistance = 0
-                                    sound.RollOffMode = Enum.RollOffMode.Linear
+                        if plr.Character then
+                            -- Sons na Head (voz do Roblox)
+                            if plr.Character:FindFirstChild("Head") then
+                                for _, sound in pairs(plr.Character.Head:GetChildren()) do
+                                    if sound:IsA("Sound") then
+                                        sound.RollOffMaxDistance = 999999
+                                        sound.RollOffMinDistance = 0
+                                        sound.RollOffMode = Enum.RollOffMode.Linear
+                                        sound.Volume = 1
+                                    end
+                                end
+                            end
+                            -- Sons no HumanoidRootPart
+                            if plr.Character:FindFirstChild("HumanoidRootPart") then
+                                for _, sound in pairs(plr.Character.HumanoidRootPart:GetChildren()) do
+                                    if sound:IsA("Sound") then
+                                        sound.RollOffMaxDistance = 999999
+                                        sound.RollOffMinDistance = 0
+                                        sound.RollOffMode = Enum.RollOffMode.Linear
+                                        sound.Volume = 1
+                                    end
+                                end
+                            end
+                            -- Sons em qualquer parte do personagem
+                            for _, part in pairs(plr.Character:GetDescendants()) do
+                                if part:IsA("Sound") then
+                                    part.RollOffMaxDistance = 999999
+                                    part.RollOffMinDistance = 0
+                                    part.RollOffMode = Enum.RollOffMode.Linear
+                                    part.Volume = 1
                                 end
                             end
                         end
@@ -780,6 +805,9 @@ globalVoiceBtn.MouseButton1Click:Connect(function()
         end)
     else
         print("[GLOBAL VOICE] DESATIVADO")
+        if globalVoiceLoop then
+            task.cancel(globalVoiceLoop)
+        end
     end
 end)
 
