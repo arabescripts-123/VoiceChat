@@ -40,7 +40,7 @@ ScrollFrame.Parent = MainFrame
 ScrollFrame.BackgroundTransparency = 1
 ScrollFrame.Position = UDim2.new(0, 0, 0, 40)
 ScrollFrame.Size = UDim2.new(1, 0, 1, -40)
-ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, 560)
+ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, 450)
 ScrollFrame.ScrollBarThickness = 6
 ScrollFrame.BorderSizePixel = 0
 
@@ -244,6 +244,10 @@ speedHandleCorner.Parent = speedHandle
 
 local aiChatBtn, aiChatIndicator = createButton("AI Chat", 0, 220)
 
+local narratorBtn, narratorIndicator = createButton("Narrador Auto", 0, 350)
+
+local narratorNowBtn = createSimpleButton("Narrar Agora", 395)
+
 -- AI Input TextBox
 local aiInputBox = Instance.new("TextBox")
 aiInputBox.Parent = ScrollFrame
@@ -312,6 +316,7 @@ musicPlayCorner.Parent = musicPlayBtn
 local allChatEnabled = false
 local aiChatEnabled = false
 local aiProcessing = false
+local narratorEnabled = false
 local PROXIMITY_DISTANCE = 50
 local ttsSpeed = 1.0
 local musicEnabled = false
@@ -739,6 +744,38 @@ aiSendBtn.MouseButton1Click:Connect(function()
     print("[AI] Enviando pergunta direta:", question)
     aiInputBox.Text = ""
     sendAI(question, player.DisplayName)
+end)
+
+narratorBtn.MouseButton1Click:Connect(function()
+    narratorEnabled = not narratorEnabled
+    narratorIndicator.BackgroundColor3 = narratorEnabled and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
+    
+    task.spawn(function()
+        pcall(function()
+            request({
+                Url = SERVER_URL .. "/narrator",
+                Method = "POST",
+                Headers = {["Content-Type"] = "application/json"},
+                Body = HttpService:JSONEncode({enabled = narratorEnabled})
+            })
+        end)
+    end)
+    
+    print("[NARRADOR]", narratorEnabled and "Ativado - Narrando a cada 2 minutos" or "Desativado")
+end)
+
+narratorNowBtn.MouseButton1Click:Connect(function()
+    print("[NARRADOR] Forçando narração imediata...")
+    task.spawn(function()
+        pcall(function()
+            request({
+                Url = SERVER_URL .. "/narrator/now",
+                Method = "POST",
+                Headers = {["Content-Type"] = "application/json"},
+                Body = HttpService:JSONEncode({})
+            })
+        end)
+    end)
 end)
 
 rejoinBtn.MouseButton1Click:Connect(function()
