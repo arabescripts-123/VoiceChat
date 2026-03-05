@@ -716,18 +716,14 @@ end
 local function searchMusic(query, playerName)
     print("[MUSIC] Buscando:", query)
     
-    -- Para música anterior APENAS se estiver tocando
     if musicPlaying then
         print("[MUSIC] Parando música anterior...")
         musicPlaying = false
         stopMusic()
-        task.wait(1.5)  -- Aguarda mais tempo para liberar arquivo
+        task.wait(1.5)
     end
     
-    -- Marca como buscando
     musicSearching = true
-    
-    -- Muda para estado "procurando" (fundo vermelho)
     musicPlayBtn.Text = "Tocar"
     musicPlayBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
     
@@ -737,11 +733,10 @@ local function searchMusic(query, playerName)
                 Url = SERVER_URL .. "/music/search",
                 Method = "POST",
                 Headers = {["Content-Type"] = "application/json"},
-                Body = HttpService:JSONEncode({query = query})
+                Body = HttpService:JSONEncode({query = query, player_name = playerName})
             })
         end)
         
-        -- Se foi cancelado durante a busca
         if not musicSearching then
             print("[MUSIC] Busca cancelada")
             return
@@ -990,28 +985,31 @@ rejoinBtn.MouseButton1Click:Connect(function()
 end)
 
 infoBtn.MouseButton1Click:Connect(function()
-    InfoPanel.Visible = true
-    task.spawn(function()
-        local success, response = pcall(function()
-            return request({
-                Url = SERVER_URL .. "/api/usage",
-                Method = "GET",
-                Headers = {["Content-Type"] = "application/json"}
-            })
+    InfoPanel.Visible = not InfoPanel.Visible
+    if InfoPanel.Visible then
+        infoText.Text = "Carregando..."
+        task.spawn(function()
+            local success, response = pcall(function()
+                return request({
+                    Url = SERVER_URL .. "/api/usage",
+                    Method = "GET",
+                    Headers = {["Content-Type"] = "application/json"}
+                })
+            end)
+            
+            if success and response and response.StatusCode == 200 then
+                local data = HttpService:JSONDecode(response.Body)
+                infoText.Text = string.format(
+                    "Gemini AI:\n%s\n\nElevenLabs (Voz IA):\n%s\n\nYouTube (Música):\n%s\n\nNota: Verifique os limites\ndiretamente nos sites oficiais.",
+                    data.gemini or "N/A",
+                    data.elevenlabs or "N/A",
+                    data.youtube or "N/A"
+                )
+            else
+                infoText.Text = "Gemini AI:\nIlimitado (Free Tier)\n\nElevenLabs (Voz IA):\nVerificar em elevenlabs.io\n\nYouTube (Música):\nSem limites (yt-dlp)\n\nNota: Servidor offline ou\nerro na conexão."
+            end
         end)
-        
-        if success and response then
-            local data = HttpService:JSONDecode(response.Body)
-            infoText.Text = string.format(
-                "Gemini AI:\n%s\n\nElevenLabs (Voz IA):\n%s\n\nYouTube (Música):\n%s\n\nNota: Verifique os limites\ndiretamente nos sites oficiais.",
-                data.gemini or "N/A",
-                data.elevenlabs or "N/A",
-                data.youtube or "N/A"
-            )
-        else
-            infoText.Text = "Erro ao carregar informações.\nVerifique se o servidor está rodando."
-        end
-    end)
+    end
 end)
 
 closeInfoBtn.MouseButton1Click:Connect(function()
