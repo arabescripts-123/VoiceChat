@@ -133,62 +133,6 @@ local infoCorner = Instance.new("UICorner")
 infoCorner.CornerRadius = UDim.new(0, 6)
 infoCorner.Parent = infoBtn
 
--- Info Panel
-local InfoPanel = Instance.new("Frame")
-InfoPanel.Parent = ScreenGui
-InfoPanel.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-InfoPanel.Position = UDim2.new(0.5, -150, 0.5, -100)
-InfoPanel.Size = UDim2.new(0, 300, 0, 200)
-InfoPanel.Visible = false
-InfoPanel.ZIndex = 10
-
-local infoPanelCorner = Instance.new("UICorner")
-infoPanelCorner.CornerRadius = UDim.new(0, 8)
-infoPanelCorner.Parent = InfoPanel
-
-local infoPanelStroke = Instance.new("UIStroke")
-infoPanelStroke.Parent = InfoPanel
-infoPanelStroke.Color = Color3.fromRGB(100, 100, 255)
-infoPanelStroke.Thickness = 2
-
-local infoTitle = Instance.new("TextLabel")
-infoTitle.Parent = InfoPanel
-infoTitle.BackgroundTransparency = 1
-infoTitle.Position = UDim2.new(0, 10, 0, 10)
-infoTitle.Size = UDim2.new(1, -20, 0, 30)
-infoTitle.Font = Enum.Font.GothamBold
-infoTitle.Text = "Uso das APIs"
-infoTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-infoTitle.TextSize = 16
-infoTitle.TextXAlignment = Enum.TextXAlignment.Left
-
-local infoText = Instance.new("TextLabel")
-infoText.Parent = InfoPanel
-infoText.BackgroundTransparency = 1
-infoText.Position = UDim2.new(0, 10, 0, 50)
-infoText.Size = UDim2.new(1, -20, 1, -90)
-infoText.Font = Enum.Font.Gotham
-infoText.Text = "Carregando..."
-infoText.TextColor3 = Color3.fromRGB(200, 200, 200)
-infoText.TextSize = 12
-infoText.TextXAlignment = Enum.TextXAlignment.Left
-infoText.TextYAlignment = Enum.TextYAlignment.Top
-infoText.TextWrapped = true
-
-local closeInfoBtn = Instance.new("TextButton")
-closeInfoBtn.Parent = InfoPanel
-closeInfoBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-closeInfoBtn.Position = UDim2.new(0.5, -40, 1, -45)
-closeInfoBtn.Size = UDim2.new(0, 80, 0, 30)
-closeInfoBtn.Font = Enum.Font.GothamBold
-closeInfoBtn.Text = "Fechar"
-closeInfoBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-closeInfoBtn.TextSize = 13
-
-local closeInfoCorner = Instance.new("UICorner")
-closeInfoCorner.CornerRadius = UDim.new(0, 6)
-closeInfoCorner.Parent = closeInfoBtn
-
 -- Dragging
 local dragging, dragInput, dragStart, startPos
 
@@ -985,35 +929,16 @@ rejoinBtn.MouseButton1Click:Connect(function()
 end)
 
 infoBtn.MouseButton1Click:Connect(function()
-    InfoPanel.Visible = not InfoPanel.Visible
-    if InfoPanel.Visible then
-        infoText.Text = "Carregando..."
-        task.spawn(function()
-            local success, response = pcall(function()
-                return request({
-                    Url = SERVER_URL .. "/api/usage",
-                    Method = "GET",
-                    Headers = {["Content-Type"] = "application/json"}
-                })
-            end)
-            
-            if success and response and response.StatusCode == 200 then
-                local data = HttpService:JSONDecode(response.Body)
-                infoText.Text = string.format(
-                    "Gemini AI:\n%s\n\nElevenLabs (Voz IA):\n%s\n\nYouTube (Música):\n%s\n\nNota: Verifique os limites\ndiretamente nos sites oficiais.",
-                    data.gemini or "N/A",
-                    data.elevenlabs or "N/A",
-                    data.youtube or "N/A"
-                )
-            else
-                infoText.Text = "Gemini AI:\nIlimitado (Free Tier)\n\nElevenLabs (Voz IA):\nVerificar em elevenlabs.io\n\nYouTube (Música):\nSem limites (yt-dlp)\n\nNota: Servidor offline ou\nerro na conexão."
-            end
+    print("[INFO] Solicitando informações de uso das APIs...")
+    task.spawn(function()
+        pcall(function()
+            request({
+                Url = SERVER_URL .. "/api/usage",
+                Method = "GET",
+                Headers = {["Content-Type"] = "application/json"}
+            })
         end)
-    end
-end)
-
-closeInfoBtn.MouseButton1Click:Connect(function()
-    InfoPanel.Visible = false
+    end)
 end)
 
 -- Music Button Events
