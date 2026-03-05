@@ -32,17 +32,8 @@ local MainFrame = Instance.new("Frame")
 MainFrame.Parent = ScreenGui
 MainFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 MainFrame.Position = UDim2.new(0.02, 0, 0.3, 0)
-MainFrame.Size = UDim2.new(0, 220, 0, 520)
+MainFrame.Size = UDim2.new(0, 220, 0, 400)
 MainFrame.ClipsDescendants = true
-
-local ScrollFrame = Instance.new("ScrollingFrame")
-ScrollFrame.Parent = MainFrame
-ScrollFrame.BackgroundTransparency = 1
-ScrollFrame.Position = UDim2.new(0, 0, 0, 40)
-ScrollFrame.Size = UDim2.new(1, 0, 1, -40)
-ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, 450)
-ScrollFrame.ScrollBarThickness = 6
-ScrollFrame.BorderSizePixel = 0
 
 local UICorner = Instance.new("UICorner")
 UICorner.CornerRadius = UDim.new(0, 8)
@@ -56,20 +47,69 @@ UIStroke.Thickness = 3
 local Title = Instance.new("TextLabel")
 Title.Parent = MainFrame
 Title.BackgroundTransparency = 1
-Title.Size = UDim2.new(1, -40, 0, 40)
+Title.Size = UDim2.new(1, -40, 0, 35)
 Title.Font = Enum.Font.GothamBold
 Title.Text = "Voice TTS + AI"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.TextSize = 18
+Title.TextSize = 16
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Position = UDim2.new(0, 10, 0, 0)
 Title.Active = true
 
+-- Tabs Container
+local TabsFrame = Instance.new("Frame")
+TabsFrame.Parent = MainFrame
+TabsFrame.BackgroundTransparency = 1
+TabsFrame.Position = UDim2.new(0, 0, 0, 35)
+TabsFrame.Size = UDim2.new(1, 0, 0, 30)
+
+local function createTab(name, pos)
+    local tab = Instance.new("TextButton")
+    tab.Parent = TabsFrame
+    tab.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    tab.Position = UDim2.new(0, pos, 0, 0)
+    tab.Size = UDim2.new(0, 70, 0, 28)
+    tab.Font = Enum.Font.Gotham
+    tab.Text = name
+    tab.TextColor3 = Color3.fromRGB(200, 200, 200)
+    tab.TextSize = 11
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = tab
+    return tab
+end
+
+local tab1 = createTab("Chat", 5)
+local tab2 = createTab("Chat IA", 77)
+local tab3 = createTab("Música", 149)
+
+-- Content Frames
+local Content1 = Instance.new("Frame")
+Content1.Parent = MainFrame
+Content1.BackgroundTransparency = 1
+Content1.Position = UDim2.new(0, 0, 0, 70)
+Content1.Size = UDim2.new(1, 0, 1, -70)
+Content1.Visible = true
+
+local Content2 = Instance.new("Frame")
+Content2.Parent = MainFrame
+Content2.BackgroundTransparency = 1
+Content2.Position = UDim2.new(0, 0, 0, 70)
+Content2.Size = UDim2.new(1, 0, 1, -70)
+Content2.Visible = false
+
+local Content3 = Instance.new("Frame")
+Content3.Parent = MainFrame
+Content3.BackgroundTransparency = 1
+Content3.Position = UDim2.new(0, 0, 0, 70)
+Content3.Size = UDim2.new(1, 0, 1, -70)
+Content3.Visible = false
+
 local rejoinBtn = Instance.new("TextButton")
 rejoinBtn.Parent = MainFrame
 rejoinBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-rejoinBtn.Position = UDim2.new(1, -40, 0, 5)
-rejoinBtn.Size = UDim2.new(0, 35, 0, 30)
+rejoinBtn.Position = UDim2.new(1, -35, 0, 3)
+rejoinBtn.Size = UDim2.new(0, 30, 0, 28)
 rejoinBtn.Font = Enum.Font.GothamBold
 rejoinBtn.Text = "R"
 rejoinBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -109,9 +149,9 @@ UIS.InputChanged:Connect(function(input)
 end)
 
 -- Buttons
-local function createButton(name, position, yPos)
+local function createButton(name, parent, yPos)
     local btn = Instance.new("TextButton")
-    btn.Parent = ScrollFrame
+    btn.Parent = parent
     btn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
     btn.Position = UDim2.new(0, 10, 0, yPos)
     btn.Size = UDim2.new(0, 200, 0, 35)
@@ -138,9 +178,9 @@ local function createButton(name, position, yPos)
     return btn, indicator
 end
 
-local function createSimpleButton(name, yPos)
+local function createSimpleButton(name, parent, yPos)
     local btn = Instance.new("TextButton")
-    btn.Parent = ScrollFrame
+    btn.Parent = parent
     btn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
     btn.Position = UDim2.new(0, 10, 0, yPos)
     btn.Size = UDim2.new(0, 200, 0, 35)
@@ -156,9 +196,9 @@ local function createSimpleButton(name, yPos)
     return btn
 end
 
-local function createModeButton(name, xPos, yPos)
+local function createModeButton(name, parent, xPos, yPos)
     local btn = Instance.new("TextButton")
-    btn.Parent = ScrollFrame
+    btn.Parent = parent
     btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
     btn.Position = UDim2.new(0, xPos, 0, yPos)
     btn.Size = UDim2.new(0, 95, 0, 30)
@@ -185,11 +225,11 @@ local function createModeButton(name, xPos, yPos)
     return btn, indicator
 end
 
--- Voice TTS Input
+-- ABA 1: CHAT
 local voiceInputBox = Instance.new("TextBox")
-voiceInputBox.Parent = ScrollFrame
+voiceInputBox.Parent = Content1
 voiceInputBox.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-voiceInputBox.Position = UDim2.new(0, 10, 0, 10)
+voiceInputBox.Position = UDim2.new(0, 10, 0, 5)
 voiceInputBox.Size = UDim2.new(0, 200, 0, 30)
 voiceInputBox.Font = Enum.Font.Gotham
 voiceInputBox.PlaceholderText = "Digite para falar..."
@@ -202,17 +242,16 @@ local voiceInputCorner = Instance.new("UICorner")
 voiceInputCorner.CornerRadius = UDim.new(0, 6)
 voiceInputCorner.Parent = voiceInputBox
 
-local voiceSendBtn = createSimpleButton("Falar", 50)
+local voiceSendBtn = createSimpleButton("Falar", Content1, 40)
 
-local allChatBtn, allChatIndicator = createButton("All Chat TTS", 0, 95)
-local filaBtn, filaIndicator = createModeButton("Fila", 10, 140)
-local newBtn, newIndicator = createModeButton("New", 115, 140)
+local allChatBtn, allChatIndicator = createButton("All Chat TTS", Content1, 85)
+local filaBtn, filaIndicator = createModeButton("Fila", Content1, 10, 130)
+local newBtn, newIndicator = createModeButton("New", Content1, 115, 130)
 
--- Speed Slider (abaixo de Fila/New)
 local speedLabel = Instance.new("TextLabel")
-speedLabel.Parent = ScrollFrame
+speedLabel.Parent = Content1
 speedLabel.BackgroundTransparency = 1
-speedLabel.Position = UDim2.new(0, 10, 0, 180)
+speedLabel.Position = UDim2.new(0, 10, 0, 170)
 speedLabel.Size = UDim2.new(0, 200, 0, 15)
 speedLabel.Font = Enum.Font.Gotham
 speedLabel.Text = "Velocidade: 1.0x"
@@ -221,9 +260,9 @@ speedLabel.TextSize = 11
 speedLabel.TextXAlignment = Enum.TextXAlignment.Left
 
 local speedTrack = Instance.new("Frame")
-speedTrack.Parent = ScrollFrame
+speedTrack.Parent = Content1
 speedTrack.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-speedTrack.Position = UDim2.new(0, 10, 0, 200)
+speedTrack.Position = UDim2.new(0, 10, 0, 190)
 speedTrack.Size = UDim2.new(0, 200, 0, 6)
 speedTrack.BorderSizePixel = 0
 
@@ -242,17 +281,13 @@ local speedHandleCorner = Instance.new("UICorner")
 speedHandleCorner.CornerRadius = UDim.new(1, 0)
 speedHandleCorner.Parent = speedHandle
 
-local aiChatBtn, aiChatIndicator = createButton("AI Chat", 0, 220)
+-- ABA 2: CHAT IA
+local aiChatBtn, aiChatIndicator = createButton("AI Chat", Content2, 5)
 
-local narratorBtn, narratorIndicator = createButton("Narrador Auto", 0, 350)
-
-local narratorNowBtn = createSimpleButton("Narrar Agora", 395)
-
--- AI Input TextBox
 local aiInputBox = Instance.new("TextBox")
-aiInputBox.Parent = ScrollFrame
+aiInputBox.Parent = Content2
 aiInputBox.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-aiInputBox.Position = UDim2.new(0, 10, 0, 265)
+aiInputBox.Position = UDim2.new(0, 10, 0, 50)
 aiInputBox.Size = UDim2.new(0, 200, 0, 30)
 aiInputBox.Font = Enum.Font.Gotham
 aiInputBox.PlaceholderText = "Pergunte algo..."
@@ -266,9 +301,9 @@ aiInputCorner.CornerRadius = UDim.new(0, 6)
 aiInputCorner.Parent = aiInputBox
 
 local aiSendBtn = Instance.new("TextButton")
-aiSendBtn.Parent = ScrollFrame
+aiSendBtn.Parent = Content2
 aiSendBtn.BackgroundColor3 = Color3.fromRGB(100, 200, 255)
-aiSendBtn.Position = UDim2.new(0, 10, 0, 305)
+aiSendBtn.Position = UDim2.new(0, 10, 0, 90)
 aiSendBtn.Size = UDim2.new(0, 200, 0, 30)
 aiSendBtn.Font = Enum.Font.GothamBold
 aiSendBtn.Text = "Enviar para IA"
@@ -279,13 +314,16 @@ local aiSendCorner = Instance.new("UICorner")
 aiSendCorner.CornerRadius = UDim.new(0, 6)
 aiSendCorner.Parent = aiSendBtn
 
--- Music Controls
-local musicBtn, musicIndicator = createButton("Música YouTube", 0, 345)
+local narratorBtn, narratorIndicator = createButton("Narrador Auto", Content2, 135)
+local narratorNowBtn = createSimpleButton("Narrar Agora", Content2, 180)
+
+-- ABA 3: MÚSICA
+local musicBtn, musicIndicator = createButton("Música YouTube", Content3, 5)
 
 local musicInputBox = Instance.new("TextBox")
-musicInputBox.Parent = ScrollFrame
+musicInputBox.Parent = Content3
 musicInputBox.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-musicInputBox.Position = UDim2.new(0, 10, 0, 390)
+musicInputBox.Position = UDim2.new(0, 10, 0, 50)
 musicInputBox.Size = UDim2.new(0, 200, 0, 30)
 musicInputBox.Font = Enum.Font.Gotham
 musicInputBox.PlaceholderText = "Nome da música..."
@@ -299,9 +337,9 @@ musicInputCorner.CornerRadius = UDim.new(0, 6)
 musicInputCorner.Parent = musicInputBox
 
 local musicPlayBtn = Instance.new("TextButton")
-musicPlayBtn.Parent = ScrollFrame
+musicPlayBtn.Parent = Content3
 musicPlayBtn.BackgroundColor3 = Color3.fromRGB(30, 215, 96)
-musicPlayBtn.Position = UDim2.new(0, 10, 0, 430)
+musicPlayBtn.Position = UDim2.new(0, 10, 0, 90)
 musicPlayBtn.Size = UDim2.new(0, 200, 0, 30)
 musicPlayBtn.Font = Enum.Font.GothamBold
 musicPlayBtn.Text = "Tocar"
@@ -311,6 +349,132 @@ musicPlayBtn.TextSize = 13
 local musicPlayCorner = Instance.new("UICorner")
 musicPlayCorner.CornerRadius = UDim.new(0, 6)
 musicPlayCorner.Parent = musicPlayBtn
+
+-- Tab System Logic
+tab1.MouseButton1Click:Connect(function()
+    Content1.Visible = true
+    Content2.Visible = false
+    Content3.Visible = false
+    tab1.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+    tab2.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    tab3.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+end)
+
+tab2.MouseButton1Click:Connect(function()
+    Content1.Visible = false
+    Content2.Visible = true
+    Content3.Visible = false
+    tab1.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    tab2.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+    tab3.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+end)
+
+tab3.MouseButton1Click:Connect(function()
+    Content1.Visible = false
+    Content2.Visible = false
+    Content3.Visible = true
+    tab1.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    tab2.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    tab3.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+end)
+
+tab1.BackgroundColor3 = Color3.fromRGB(100, 100, 100)ocal aiChatBtn, aiChatIndicator = createButton("AI Chat", Content2, 5)
+
+local aiInputBox = Instance.new("TextBox")
+aiInputBox.Parent = Content2
+aiInputBox.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+aiInputBox.Position = UDim2.new(0, 10, 0, 50)
+aiInputBox.Size = UDim2.new(0, 200, 0, 30)
+aiInputBox.Font = Enum.Font.Gotham
+aiInputBox.PlaceholderText = "Pergunte algo..."
+aiInputBox.Text = ""
+aiInputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+aiInputBox.TextSize = 12
+aiInputBox.ClearTextOnFocus = false
+
+local aiInputCorner = Instance.new("UICorner")
+aiInputCorner.CornerRadius = UDim.new(0, 6)
+aiInputCorner.Parent = aiInputBox
+
+local aiSendBtn = Instance.new("TextButton")
+aiSendBtn.Parent = Content2
+aiSendBtn.BackgroundColor3 = Color3.fromRGB(100, 200, 255)
+aiSendBtn.Position = UDim2.new(0, 10, 0, 90)
+aiSendBtn.Size = UDim2.new(0, 200, 0, 30)
+aiSendBtn.Font = Enum.Font.GothamBold
+aiSendBtn.Text = "Enviar para IA"
+aiSendBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+aiSendBtn.TextSize = 13
+
+local aiSendCorner = Instance.new("UICorner")
+aiSendCorner.CornerRadius = UDim.new(0, 6)
+aiSendCorner.Parent = aiSendBtn
+
+local narratorBtn, narratorIndicator = createButton("Narrador Auto", Content2, 135)
+local narratorNowBtn = createSimpleButton("Narrar Agora", Content2, 180)
+
+-- ABA 3: MÚSICA
+local musicBtn, musicIndicator = createButton("Música YouTube", Content3, 5)
+
+local musicInputBox = Instance.new("TextBox")
+musicInputBox.Parent = Content3
+musicInputBox.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+musicInputBox.Position = UDim2.new(0, 10, 0, 50)
+musicInputBox.Size = UDim2.new(0, 200, 0, 30)
+musicInputBox.Font = Enum.Font.Gotham
+musicInputBox.PlaceholderText = "Nome da música..."
+musicInputBox.Text = ""
+musicInputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+musicInputBox.TextSize = 12
+musicInputBox.ClearTextOnFocus = false
+
+local musicInputCorner = Instance.new("UICorner")
+musicInputCorner.CornerRadius = UDim.new(0, 6)
+musicInputCorner.Parent = musicInputBox
+
+local musicPlayBtn = Instance.new("TextButton")
+musicPlayBtn.Parent = Content3
+musicPlayBtn.BackgroundColor3 = Color3.fromRGB(30, 215, 96)
+musicPlayBtn.Position = UDim2.new(0, 10, 0, 90)
+musicPlayBtn.Size = UDim2.new(0, 200, 0, 30)
+musicPlayBtn.Font = Enum.Font.GothamBold
+musicPlayBtn.Text = "Tocar"
+musicPlayBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+musicPlayBtn.TextSize = 13
+
+local musicPlayCorner = Instance.new("UICorner")
+musicPlayCorner.CornerRadius = UDim.new(0, 6)
+musicPlayCorner.Parent = musicPlayBtn
+
+-- Tab System Logic
+tab1.MouseButton1Click:Connect(function()
+    Content1.Visible = true
+    Content2.Visible = false
+    Content3.Visible = false
+    tab1.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+    tab2.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    tab3.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+end)
+
+tab2.MouseButton1Click:Connect(function()
+    Content1.Visible = false
+    Content2.Visible = true
+    Content3.Visible = false
+    tab1.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    tab2.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+    tab3.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+end)
+
+tab3.MouseButton1Click:Connect(function()
+    Content1.Visible = false
+    Content2.Visible = false
+    Content3.Visible = true
+    tab1.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    tab2.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    tab3.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+end)
+
+tab1.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
 
 -- Variables
 local allChatEnabled = false
