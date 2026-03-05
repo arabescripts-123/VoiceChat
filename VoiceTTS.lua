@@ -306,6 +306,7 @@ local ttsSpeed = 1.0
 local musicEnabled = false
 local musicPlaying = false
 local musicSearching = false
+local musicToggling = false
 
 -- Queue System
 local queueMode = true
@@ -749,6 +750,12 @@ end)
 
 -- Music Button Events
 musicBtn.MouseButton1Click:Connect(function()
+    if musicToggling then
+        print("[MUSIC] Aguarde...")
+        return
+    end
+    
+    musicToggling = true
     print("[MUSIC] Alternando estado...")
     
     -- Envia toggle para o servidor ANTES de mudar o estado local
@@ -765,10 +772,13 @@ musicBtn.MouseButton1Click:Connect(function()
         local data = HttpService:JSONDecode(response.Body)
         musicEnabled = data.enabled
         musicIndicator.BackgroundColor3 = musicEnabled and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
-        print("[MUSIC]", musicEnabled and "Ativado!" or "Desativado!")
+        print("[MUSIC]", musicEnabled and "ATIVADO!" or "DESATIVADO!")
     else
         warn("[MUSIC] Erro ao alternar estado")
     end
+    
+    task.wait(0.5)
+    musicToggling = false
 end)
 
 musicPlayBtn.MouseButton1Click:Connect(function()
