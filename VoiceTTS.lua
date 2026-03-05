@@ -33,6 +33,16 @@ MainFrame.Parent = ScreenGui
 MainFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 MainFrame.Position = UDim2.new(0.02, 0, 0.3, 0)
 MainFrame.Size = UDim2.new(0, 220, 0, 520)
+MainFrame.ClipsDescendants = true
+
+local ScrollFrame = Instance.new("ScrollingFrame")
+ScrollFrame.Parent = MainFrame
+ScrollFrame.BackgroundTransparency = 1
+ScrollFrame.Position = UDim2.new(0, 0, 0, 40)
+ScrollFrame.Size = UDim2.new(1, 0, 1, -40)
+ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, 560)
+ScrollFrame.ScrollBarThickness = 6
+ScrollFrame.BorderSizePixel = 0
 
 local UICorner = Instance.new("UICorner")
 UICorner.CornerRadius = UDim.new(0, 8)
@@ -101,7 +111,7 @@ end)
 -- Buttons
 local function createButton(name, position, yPos)
     local btn = Instance.new("TextButton")
-    btn.Parent = MainFrame
+    btn.Parent = ScrollFrame
     btn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
     btn.Position = UDim2.new(0, 10, 0, yPos)
     btn.Size = UDim2.new(0, 200, 0, 35)
@@ -130,7 +140,7 @@ end
 
 local function createSimpleButton(name, yPos)
     local btn = Instance.new("TextButton")
-    btn.Parent = MainFrame
+    btn.Parent = ScrollFrame
     btn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
     btn.Position = UDim2.new(0, 10, 0, yPos)
     btn.Size = UDim2.new(0, 200, 0, 35)
@@ -148,7 +158,7 @@ end
 
 local function createModeButton(name, xPos, yPos)
     local btn = Instance.new("TextButton")
-    btn.Parent = MainFrame
+    btn.Parent = ScrollFrame
     btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
     btn.Position = UDim2.new(0, xPos, 0, yPos)
     btn.Size = UDim2.new(0, 95, 0, 30)
@@ -177,7 +187,7 @@ end
 
 -- Voice TTS Input
 local voiceInputBox = Instance.new("TextBox")
-voiceInputBox.Parent = MainFrame
+voiceInputBox.Parent = ScrollFrame
 voiceInputBox.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 voiceInputBox.Position = UDim2.new(0, 10, 0, 50)
 voiceInputBox.Size = UDim2.new(0, 200, 0, 30)
@@ -194,17 +204,16 @@ voiceInputCorner.Parent = voiceInputBox
 
 local voiceSendBtn = createSimpleButton("Falar", 90)
 
-local allChatBtn, allChatIndicator = createButton("All Chat TTS", 0, 135)
-local filaBtn, filaIndicator = createModeButton("Fila", 10, 180)
-local newBtn, newIndicator = createModeButton("New", 115, 180)
-local globalVoiceBtn, globalVoiceIndicator = createButton("Voz Global", 0, 220)
-local aiChatBtn, aiChatIndicator = createButton("AI Chat", 0, 270)
+local allChatBtn, allChatIndicator = createButton("All Chat TTS", 0, 95)
+local filaBtn, filaIndicator = createModeButton("Fila", 10, 140)
+local newBtn, newIndicator = createModeButton("New", 115, 140)
+local aiChatBtn, aiChatIndicator = createButton("AI Chat", 0, 180)
 
 -- AI Input TextBox
 local aiInputBox = Instance.new("TextBox")
-aiInputBox.Parent = MainFrame
+aiInputBox.Parent = ScrollFrame
 aiInputBox.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-aiInputBox.Position = UDim2.new(0, 10, 0, 315)
+aiInputBox.Position = UDim2.new(0, 10, 0, 225)
 aiInputBox.Size = UDim2.new(0, 200, 0, 30)
 aiInputBox.Font = Enum.Font.Gotham
 aiInputBox.PlaceholderText = "Pergunte algo..."
@@ -218,9 +227,9 @@ aiInputCorner.CornerRadius = UDim.new(0, 6)
 aiInputCorner.Parent = aiInputBox
 
 local aiSendBtn = Instance.new("TextButton")
-aiSendBtn.Parent = MainFrame
+aiSendBtn.Parent = ScrollFrame
 aiSendBtn.BackgroundColor3 = Color3.fromRGB(100, 200, 255)
-aiSendBtn.Position = UDim2.new(0, 10, 0, 355)
+aiSendBtn.Position = UDim2.new(0, 10, 0, 265)
 aiSendBtn.Size = UDim2.new(0, 200, 0, 30)
 aiSendBtn.Font = Enum.Font.GothamBold
 aiSendBtn.Text = "Enviar para IA"
@@ -232,12 +241,12 @@ aiSendCorner.CornerRadius = UDim.new(0, 6)
 aiSendCorner.Parent = aiSendBtn
 
 -- Music Controls
-local musicBtn, musicIndicator = createButton("Música YouTube", 0, 395)
+local musicBtn, musicIndicator = createButton("Música YouTube", 0, 305)
 
 local musicInputBox = Instance.new("TextBox")
-musicInputBox.Parent = MainFrame
+musicInputBox.Parent = ScrollFrame
 musicInputBox.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-musicInputBox.Position = UDim2.new(0, 10, 0, 440)
+musicInputBox.Position = UDim2.new(0, 10, 0, 350)
 musicInputBox.Size = UDim2.new(0, 200, 0, 30)
 musicInputBox.Font = Enum.Font.Gotham
 musicInputBox.PlaceholderText = "Nome da música..."
@@ -251,9 +260,9 @@ musicInputCorner.CornerRadius = UDim.new(0, 6)
 musicInputCorner.Parent = musicInputBox
 
 local musicPlayBtn = Instance.new("TextButton")
-musicPlayBtn.Parent = MainFrame
+musicPlayBtn.Parent = ScrollFrame
 musicPlayBtn.BackgroundColor3 = Color3.fromRGB(30, 215, 96)
-musicPlayBtn.Position = UDim2.new(0, 10, 0, 480)
+musicPlayBtn.Position = UDim2.new(0, 10, 0, 390)
 musicPlayBtn.Size = UDim2.new(0, 200, 0, 30)
 musicPlayBtn.Font = Enum.Font.GothamBold
 musicPlayBtn.Text = "Tocar"
@@ -264,11 +273,14 @@ local musicPlayCorner = Instance.new("UICorner")
 musicPlayCorner.CornerRadius = UDim.new(0, 6)
 musicPlayCorner.Parent = musicPlayBtn
 
+-- Global Voice Button (Independent)
+local globalVoiceBtn, globalVoiceIndicator = createButton("Voz Global", 0, 430)
+
 -- Speed Slider
 local speedLabel = Instance.new("TextLabel")
 speedLabel.Parent = MainFrame
 speedLabel.BackgroundTransparency = 1
-speedLabel.Position = UDim2.new(0, 10, 0, 215)
+speedLabel.Position = UDim2.new(0, 10, 0, 10)
 speedLabel.Size = UDim2.new(0, 200, 0, 15)
 speedLabel.Font = Enum.Font.Gotham
 speedLabel.Text = "Velocidade: 1.0x"
@@ -277,9 +289,9 @@ speedLabel.TextSize = 11
 speedLabel.TextXAlignment = Enum.TextXAlignment.Left
 
 local speedTrack = Instance.new("Frame")
-speedTrack.Parent = MainFrame
+speedTrack.Parent = ScrollFrame
 speedTrack.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-speedTrack.Position = UDim2.new(0, 10, 0, 235)
+speedTrack.Position = UDim2.new(0, 10, 0, 30)
 speedTrack.Size = UDim2.new(0, 200, 0, 6)
 speedTrack.BorderSizePixel = 0
 
@@ -738,24 +750,25 @@ rejoinBtn.MouseButton1Click:Connect(function()
     TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, player)
 end)
 
--- Global Voice Button
+-- Global Voice Button (Independent - affects ALL voice sounds)
 globalVoiceBtn.MouseButton1Click:Connect(function()
     globalVoiceEnabled = not globalVoiceEnabled
     globalVoiceIndicator.BackgroundColor3 = globalVoiceEnabled and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
     
     if globalVoiceEnabled then
-        print("[VOICE] Voz Global ATIVADA - Todos te ouvem!")
+        print("[GLOBAL VOICE] ATIVADO - Todos ouvem sem limite de distância!")
         globalVoiceLoop = task.spawn(function()
             while globalVoiceEnabled do
-                task.wait(1)
+                task.wait(0.5)
                 pcall(function()
-                    if player.Character and player.Character:FindFirstChild("Head") then
-                        local head = player.Character.Head
-                        for _, sound in pairs(head:GetChildren()) do
-                            if sound:IsA("Sound") then
-                                sound.RollOffMaxDistance = 999999
-                                sound.RollOffMinDistance = 0
-                                sound.RollOffMode = Enum.RollOffMode.Linear
+                    for _, plr in pairs(game.Players:GetPlayers()) do
+                        if plr.Character and plr.Character:FindFirstChild("Head") then
+                            for _, sound in pairs(plr.Character.Head:GetChildren()) do
+                                if sound:IsA("Sound") then
+                                    sound.RollOffMaxDistance = 999999
+                                    sound.RollOffMinDistance = 0
+                                    sound.RollOffMode = Enum.RollOffMode.Linear
+                                end
                             end
                         end
                     end
@@ -763,7 +776,7 @@ globalVoiceBtn.MouseButton1Click:Connect(function()
             end
         end)
     else
-        print("[VOICE] Voz Global DESATIVADA")
+        print("[GLOBAL VOICE] DESATIVADO")
     end
 end)
 
