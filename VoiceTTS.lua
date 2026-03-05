@@ -189,7 +189,7 @@ end
 local voiceInputBox = Instance.new("TextBox")
 voiceInputBox.Parent = ScrollFrame
 voiceInputBox.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-voiceInputBox.Position = UDim2.new(0, 10, 0, 50)
+voiceInputBox.Position = UDim2.new(0, 10, 0, 10)
 voiceInputBox.Size = UDim2.new(0, 200, 0, 30)
 voiceInputBox.Font = Enum.Font.Gotham
 voiceInputBox.PlaceholderText = "Digite para falar..."
@@ -202,18 +202,52 @@ local voiceInputCorner = Instance.new("UICorner")
 voiceInputCorner.CornerRadius = UDim.new(0, 6)
 voiceInputCorner.Parent = voiceInputBox
 
-local voiceSendBtn = createSimpleButton("Falar", 90)
+local voiceSendBtn = createSimpleButton("Falar", 50)
 
 local allChatBtn, allChatIndicator = createButton("All Chat TTS", 0, 95)
 local filaBtn, filaIndicator = createModeButton("Fila", 10, 140)
 local newBtn, newIndicator = createModeButton("New", 115, 140)
-local aiChatBtn, aiChatIndicator = createButton("AI Chat", 0, 180)
+
+-- Speed Slider
+local speedLabel = Instance.new("TextLabel")
+speedLabel.Parent = ScrollFrame
+speedLabel.BackgroundTransparency = 1
+speedLabel.Position = UDim2.new(0, 10, 0, 180)
+speedLabel.Size = UDim2.new(0, 200, 0, 15)
+speedLabel.Font = Enum.Font.Gotham
+speedLabel.Text = "Velocidade: 1.0x"
+speedLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+speedLabel.TextSize = 11
+speedLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+local speedTrack = Instance.new("Frame")
+speedTrack.Parent = ScrollFrame
+speedTrack.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+speedTrack.Position = UDim2.new(0, 10, 0, 200)
+speedTrack.Size = UDim2.new(0, 200, 0, 6)
+speedTrack.BorderSizePixel = 0
+
+local speedTrackCorner = Instance.new("UICorner")
+speedTrackCorner.CornerRadius = UDim.new(1, 0)
+speedTrackCorner.Parent = speedTrack
+
+local speedHandle = Instance.new("Frame")
+speedHandle.Parent = speedTrack
+speedHandle.BackgroundColor3 = Color3.fromRGB(100, 200, 255)
+speedHandle.Position = UDim2.new(0, 0, 0.5, -8)
+speedHandle.Size = UDim2.new(0, 16, 0, 16)
+speedHandle.BorderSizePixel = 0
+
+local speedHandleCorner = Instance.new("UICorner")
+speedHandleCorner.CornerRadius = UDim.new(1, 0)
+speedHandleCorner.Parent = speedHandle
+local aiChatBtn, aiChatIndicator = createButton("AI Chat", 0, 220)
 
 -- AI Input TextBox
 local aiInputBox = Instance.new("TextBox")
 aiInputBox.Parent = ScrollFrame
 aiInputBox.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-aiInputBox.Position = UDim2.new(0, 10, 0, 225)
+aiInputBox.Position = UDim2.new(0, 10, 0, 265)
 aiInputBox.Size = UDim2.new(0, 200, 0, 30)
 aiInputBox.Font = Enum.Font.Gotham
 aiInputBox.PlaceholderText = "Pergunte algo..."
@@ -229,7 +263,7 @@ aiInputCorner.Parent = aiInputBox
 local aiSendBtn = Instance.new("TextButton")
 aiSendBtn.Parent = ScrollFrame
 aiSendBtn.BackgroundColor3 = Color3.fromRGB(100, 200, 255)
-aiSendBtn.Position = UDim2.new(0, 10, 0, 265)
+aiSendBtn.Position = UDim2.new(0, 10, 0, 305)
 aiSendBtn.Size = UDim2.new(0, 200, 0, 30)
 aiSendBtn.Font = Enum.Font.GothamBold
 aiSendBtn.Text = "Enviar para IA"
@@ -241,12 +275,12 @@ aiSendCorner.CornerRadius = UDim.new(0, 6)
 aiSendCorner.Parent = aiSendBtn
 
 -- Music Controls
-local musicBtn, musicIndicator = createButton("Música YouTube", 0, 305)
+local musicBtn, musicIndicator = createButton("Música YouTube", 0, 345)
 
 local musicInputBox = Instance.new("TextBox")
 musicInputBox.Parent = ScrollFrame
 musicInputBox.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-musicInputBox.Position = UDim2.new(0, 10, 0, 350)
+musicInputBox.Position = UDim2.new(0, 10, 0, 390)
 musicInputBox.Size = UDim2.new(0, 200, 0, 30)
 musicInputBox.Font = Enum.Font.Gotham
 musicInputBox.PlaceholderText = "Nome da música..."
@@ -262,7 +296,7 @@ musicInputCorner.Parent = musicInputBox
 local musicPlayBtn = Instance.new("TextButton")
 musicPlayBtn.Parent = ScrollFrame
 musicPlayBtn.BackgroundColor3 = Color3.fromRGB(30, 215, 96)
-musicPlayBtn.Position = UDim2.new(0, 10, 0, 390)
+musicPlayBtn.Position = UDim2.new(0, 10, 0, 430)
 musicPlayBtn.Size = UDim2.new(0, 200, 0, 30)
 musicPlayBtn.Font = Enum.Font.GothamBold
 musicPlayBtn.Text = "Tocar"
@@ -274,25 +308,12 @@ musicPlayCorner.CornerRadius = UDim.new(0, 6)
 musicPlayCorner.Parent = musicPlayBtn
 
 -- Global Voice Button (Independent)
-local globalVoiceBtn, globalVoiceIndicator = createButton("Voz Global", 0, 430)
-
--- Speed Slider
-local speedLabel = Instance.new("TextLabel")
-speedLabel.Parent = MainFrame
-speedLabel.BackgroundTransparency = 1
-speedLabel.Position = UDim2.new(0, 10, 0, 10)
-speedLabel.Size = UDim2.new(0, 200, 0, 15)
-speedLabel.Font = Enum.Font.Gotham
-speedLabel.Text = "Velocidade: 1.0x"
+local globalVoiceBtn, globalVoiceIndicator = createButton("Voz Global", 0, 470)
 speedLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
 speedLabel.TextSize = 11
 speedLabel.TextXAlignment = Enum.TextXAlignment.Left
 
-local speedTrack = Instance.new("Frame")
-speedTrack.Parent = ScrollFrame
-speedTrack.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-speedTrack.Position = UDim2.new(0, 10, 0, 30)
-speedTrack.Size = UDim2.new(0, 200, 0, 6)
+
 speedTrack.BorderSizePixel = 0
 
 local speedTrackCorner = Instance.new("UICorner")
