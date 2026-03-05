@@ -536,11 +536,13 @@ end
 local function searchMusic(query, playerName)
     print("[MUSIC] Buscando:", query)
     
-    -- Para música anterior e aguarda
-    if musicPlaying then
+    -- Para música anterior e aguarda mais tempo
+    if musicPlaying or musicSearching then
+        print("[MUSIC] Parando música anterior...")
         musicPlaying = false
+        musicSearching = false
         stopMusic()
-        task.wait(1)
+        task.wait(1.5)
     end
     
     -- Marca como buscando
