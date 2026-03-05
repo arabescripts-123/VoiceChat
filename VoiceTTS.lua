@@ -577,19 +577,6 @@ local function searchMusic(query, playerName)
                 musicSearching = false
                 musicPlayBtn.Text = "Interromper"
                 musicPlayBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-                
-                -- Fala o nome da música
-                local announceText = playerName and (playerName .. " tocou: " .. data.title) or ("Tocando: " .. data.title)
-                task.spawn(function()
-                    pcall(function()
-                        request({
-                            Url = SERVER_URL .. "/tts",
-                            Method = "POST",
-                            Headers = {["Content-Type"] = "application/json"},
-                            Body = HttpService:JSONEncode({text = announceText, priority = "high", speed = ttsSpeed})
-                        })
-                    end)
-                end)
             else
                 print("[MUSIC] Não encontrada")
                 musicPlaying = false
