@@ -437,6 +437,8 @@ local messageQueue = {}
 local isProcessingQueue = false
 local currentTTSId = 0
 local isPlayingNew = false
+local lastPlayerSpoke = ""  -- Rastreia o último player que falou
+local lastPlayerMessages = {}  -- Armazena mensagens do último player
 
 -- Speed Slider Logic
 local speedDragging = false
@@ -549,7 +551,7 @@ local function processQueue()
     end)
 end
 
-local function handleTTS(text, priority)
+local function handleTTS(text, priority, playerName)
     currentTTSId = currentTTSId + 1
     local ttsId = currentTTSId
     
@@ -558,6 +560,8 @@ local function handleTTS(text, priority)
         messageQueue = {}
         isProcessingQueue = false
         isPlayingNew = false
+        lastPlayerSpoke = ""
+        lastPlayerMessages = {}
         sendTTS(text, ttsId, "high")
         
         task.spawn(function()
@@ -573,8 +577,26 @@ local function handleTTS(text, priority)
             end
         end)
     elseif queueMode then
-        table.insert(messageQueue, {text = text, id = ttsId})
-        print("[FILA] Adicionado:", text, "| Total:", #messageQueue)
+        -- Sistema de agrupamento para modo Fila
+        if playerName == lastPlayerSpoke and #lastPlayerMessages > 0 then
+            -- Mesmo player falando consecutivamente - agrupa mensagens
+            table.insert(lastPlayerMessages, text)
+            print("[FILA] Agrupando mensagem de", playerName, "| Total agrupado:", #lastPlayerMessages)
+            
+            -- Atualiza a última mensagem na fila com todas as mensagens agrupadas
+            if #messageQueue > 0 then
+                local combinedText = playerName .. " falou " .. table.concat(lastPlayerMessages, ", ")
+                messageQueue[#messageQueue].text = combinedText
+                print("[FILA] Mensagem agrupada:", combinedText)
+            end
+        else
+            -- Player diferente ou primeira mensagem - cria nova entrada
+            lastPlayerSpoke = playerName
+            lastPlayerMessages = {text}
+            local fullText = playerName .. " falou " .. text
+            table.insert(messageQueue, {text = fullText, id = ttsId})
+            print("[FILA] Nova mensagem de", playerName, "| Total na fila:", #messageQueue)
+        end
         processQueue()
     else
         messageQueue = {{text = text, id = ttsId}}
@@ -751,7 +773,7 @@ voiceSendBtn.MouseButton1Click:Connect(function()
             })
         end)
         task.wait(0.3)
-        handleTTS(text, "high")
+        handleTTS(text, "high", player.DisplayName)
     end)
 end)
 
@@ -1047,9 +1069,9 @@ local function setupPlayerChat(plr)
         end
         
         if allChatEnabled and not aiProcessing then
-            local textToSpeak = plr.DisplayName .. " falou " .. message
-            print("[DEBUG] Falando:", textToSpeak)
-            handleTTS(textToSpeak, "low")
+            local textToSpeak = message
+            print("[DEBUG] Falando:", plr.DisplayName, "-", textToSpeak)
+            handleTTS(textToSpeak, "low", plr.DisplayName)
         end
     end)
 end
