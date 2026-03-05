@@ -541,6 +541,10 @@ local function searchMusic(query, playerName)
     
     print("[MUSIC] Buscando:", query)
     
+    -- Muda para estado "procurando" (fundo vermelho)
+    musicPlayBtn.Text = "Tocar"
+    musicPlayBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+    
     task.spawn(function()
         local success, result = pcall(function()
             return request({
