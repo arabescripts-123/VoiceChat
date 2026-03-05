@@ -308,11 +308,6 @@ local musicPlayCorner = Instance.new("UICorner")
 musicPlayCorner.CornerRadius = UDim.new(0, 6)
 musicPlayCorner.Parent = musicPlayBtn
 
--- Global Voice Button (Independent)
-local globalVoiceBtn, globalVoiceIndicator = createButton("Voz Global", 0, 470)
-
-
-
 -- Variables
 local allChatEnabled = false
 local aiChatEnabled = false
@@ -323,8 +318,6 @@ local musicEnabled = false
 local musicPlaying = false
 local musicSearching = false
 local musicToggling = false
-local globalVoiceEnabled = false
-local globalVoiceLoop = nil
 
 -- Queue System
 local queueMode = true
@@ -751,64 +744,6 @@ end)
 rejoinBtn.MouseButton1Click:Connect(function()
     local TeleportService = game:GetService("TeleportService")
     TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, player)
-end)
-
--- Global Voice Button (Método que FUNCIONA com exploits)
-globalVoiceBtn.MouseButton1Click:Connect(function()
-    globalVoiceEnabled = not globalVoiceEnabled
-    globalVoiceIndicator.BackgroundColor3 = globalVoiceEnabled and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
-    
-    if globalVoiceEnabled then
-        print("[GLOBAL VOICE] ATIVADO - Modificando propriedades de áudio!")
-        
-        globalVoiceLoop = task.spawn(function()
-            while globalVoiceEnabled do
-                task.wait(0.05) -- Atualização muito rápida
-                
-                pcall(function()
-                    -- Modifica TODOS os sons de TODOS os jogadores
-                    for _, plr in pairs(game.Players:GetPlayers()) do
-                        if plr.Character then
-                            -- Procura em TODAS as partes do personagem
-                            for _, descendant in pairs(plr.Character:GetDescendants()) do
-                                if descendant:IsA("Sound") then
-                                    -- Remove completamente a atenuação por distância
-                                    descendant.RollOffMode = Enum.RollOffMode.Inverse
-                                    descendant.RollOffMinDistance = 999999
-                                    descendant.RollOffMaxDistance = 999999
-                                    descendant.Volume = 0.5
-                                end
-                            end
-                        end
-                    end
-                end)
-            end
-        end)
-        
-    else
-        print("[GLOBAL VOICE] DESATIVADO")
-        
-        -- Para o loop
-        if globalVoiceLoop then
-            task.cancel(globalVoiceLoop)
-            globalVoiceLoop = nil
-        end
-        
-        -- Restaura configurações padrão
-        pcall(function()
-            for _, plr in pairs(game.Players:GetPlayers()) do
-                if plr.Character then
-                    for _, descendant in pairs(plr.Character:GetDescendants()) do
-                        if descendant:IsA("Sound") then
-                            descendant.RollOffMode = Enum.RollOffMode.Inverse
-                            descendant.RollOffMinDistance = 10
-                            descendant.RollOffMaxDistance = 1000
-                        end
-                    end
-                end
-            end
-        end)
-    end
 end)
 
 -- Music Button Events
