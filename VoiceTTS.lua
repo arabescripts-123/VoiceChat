@@ -324,7 +324,8 @@ local musicPlaying = false
 local musicSearching = false
 local musicToggling = false
 local globalVoiceEnabled = false
-local globalVoiceLoop = nil
+local globalVoiceConnections = {}
+local audioInput = nil
 
 -- Queue System
 local queueMode = true
@@ -753,61 +754,99 @@ rejoinBtn.MouseButton1Click:Connect(function()
     TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, player)
 end)
 
--- Global Voice Button (Independent - affects ALL voice sounds)
+-- Global Voice Button (usando Nova API de Áudio)
 globalVoiceBtn.MouseButton1Click:Connect(function()
     globalVoiceEnabled = not globalVoiceEnabled
     globalVoiceIndicator.BackgroundColor3 = globalVoiceEnabled and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
     
     if globalVoiceEnabled then
-        print("[GLOBAL VOICE] ATIVADO - Todos ouvem TUDO sem limite!")
-        globalVoiceLoop = task.spawn(function()
-            while globalVoiceEnabled do
-                task.wait(0.1)
-                pcall(function()
-                    -- Modifica TODOS os sons de TODOS os jogadores
-                    for _, plr in pairs(game.Players:GetPlayers()) do
-                        if plr.Character then
-                            -- Sons na Head (voz do Roblox)
-                            if plr.Character:FindFirstChild("Head") then
-                                for _, sound in pairs(plr.Character.Head:GetChildren()) do
-                                    if sound:IsA("Sound") then
-                                        sound.RollOffMaxDistance = 999999
-                                        sound.RollOffMinDistance = 0
-                                        sound.RollOffMode = Enum.RollOffMode.Linear
-                                        sound.Volume = 1
-                                    end
-                                end
-                            end
-                            -- Sons no HumanoidRootPart
-                            if plr.Character:FindFirstChild("HumanoidRootPart") then
-                                for _, sound in pairs(plr.Character.HumanoidRootPart:GetChildren()) do
-                                    if sound:IsA("Sound") then
-                                        sound.RollOffMaxDistance = 999999
-                                        sound.RollOffMinDistance = 0
-                                        sound.RollOffMode = Enum.RollOffMode.Linear
-                                        sound.Volume = 1
-                                    end
-                                end
-                            end
-                            -- Sons em qualquer parte do personagem
-                            for _, part in pairs(plr.Character:GetDescendants()) do
-                                if part:IsA("Sound") then
-                                    part.RollOffMaxDistance = 999999
-                                    part.RollOffMinDistance = 0
-                                    part.RollOffMode = Enum.RollOffMode.Linear
-                                    part.Volume = 1
-                                end
-                            end
-                        end
-                    end
-                end)
+        print("[GLOBAL VOICE] ATIVADO - Todos ouvem seu microfone!")
+        
+        -- Cria o AudioDeviceInput (captura seu microfone)
+        local success, err = pcall(function()
+            audioInput = Instance.new("AudioDeviceInput")
+            audioInput.Player = player
+            audioInput.Parent = player
+            audioInput.Active = true
+        end)
+        
+        if not success then
+            warn("[GLOBAL VOICE] Erro ao criar AudioDeviceInput:", err)
+            globalVoiceEnabled = false
+            globalVoiceIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+            return
+        end
+        
+        -- Função para conectar a um jogador
+        local function connectToPlayer(targetPlayer)
+            if targetPlayer == player then return end
+            
+            pcall(function()
+                -- Cria saída de áudio para o jogador ouvir
+                local output = Instance.new("AudioDeviceOutput")
+                output.Player = targetPlayer
+                output.Parent = targetPlayer
+                
+                -- Wire conecta seu microfone à saída dele (SEM distância 3D)
+                local wire = Instance.new("Wire")
+                wire.SourceInstance = audioInput
+                wire.TargetInstance = output
+                wire.Parent = output
+                
+                -- Guarda a conexão
+                globalVoiceConnections[targetPlayer.UserId] = {output = output, wire = wire}
+                print("[GLOBAL VOICE] Conectado a:", targetPlayer.DisplayName)
+            end)
+        end
+        
+        -- Conecta a todos os jogadores atuais
+        for _, plr in pairs(game.Players:GetPlayers()) do
+            connectToPlayer(plr)
+        end
+        
+        -- Conecta a novos jogadores que entrarem
+        globalVoiceConnections.playerAddedConn = game.Players.PlayerAdded:Connect(function(plr)
+            if globalVoiceEnabled then
+                task.wait(1) -- Aguarda o jogador carregar
+                connectToPlayer(plr)
             end
         end)
+        
+        -- Remove conexão quando jogador sair
+        globalVoiceConnections.playerRemovingConn = game.Players.PlayerRemoving:Connect(function(plr)
+            if globalVoiceConnections[plr.UserId] then
+                pcall(function()
+                    globalVoiceConnections[plr.UserId].output:Destroy()
+                end)
+                globalVoiceConnections[plr.UserId] = nil
+            end
+        end)
+        
     else
         print("[GLOBAL VOICE] DESATIVADO")
-        if globalVoiceLoop then
-            task.cancel(globalVoiceLoop)
+        
+        -- Desconecta tudo
+        if audioInput then
+            pcall(function() audioInput:Destroy() end)
+            audioInput = nil
         end
+        
+        -- Remove todas as conexões
+        for userId, conn in pairs(globalVoiceConnections) do
+            if type(conn) == "table" and conn.output then
+                pcall(function() conn.output:Destroy() end)
+            end
+        end
+        
+        -- Desconecta eventos
+        if globalVoiceConnections.playerAddedConn then
+            globalVoiceConnections.playerAddedConn:Disconnect()
+        end
+        if globalVoiceConnections.playerRemovingConn then
+            globalVoiceConnections.playerRemovingConn:Disconnect()
+        end
+        
+        globalVoiceConnections = {}
     end
 end)
 
